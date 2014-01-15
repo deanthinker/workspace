@@ -93,7 +93,7 @@ public class PanelProductAnalysis extends JPanel {
 	
 	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE){
 		private static final long serialVersionUID = 1L;
-		public void updateChart() {
+		public void update() {
 			JFreeChart tchart = null;
 			ChartPanel jfcPanel = null;
 
@@ -205,7 +205,7 @@ public class PanelProductAnalysis extends JPanel {
 					case "3YRDIST":		chartMode = MODE_3YRDIST;	break;				
 				}
 				
-				panelSearchPcode.updateChart();
+				panelSearchPcode.update();
 			}
 		};
 		

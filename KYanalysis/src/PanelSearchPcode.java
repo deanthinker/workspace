@@ -39,7 +39,6 @@ public abstract class PanelSearchPcode extends JPanel {
 	public JList<String> listVegeProd = new JList<String>(listVegeProd_model);
 	public JScrollPane scpVegeList = new JScrollPane(listVegeProd);
 	public JComboBox<String> cbxCrop = new JComboBox<String>(db.getVegeCropVec());
-	public JComboBox<String> cbxYear = new JComboBox<String>(u.create10yearVector());		
 	public JCheckBox chkSort = new JCheckBox("排序");
 	public JComboBox<String> cbxSort = new JComboBox<String>();
 	
@@ -111,7 +110,7 @@ public abstract class PanelSearchPcode extends JPanel {
 		cbxSort.setModel(new DefaultComboBoxModel<String>(new String[] 
 				{
 				"年銷售總額NT$", 
-				"總銷售總重Kg" 
+				"年銷售總重Kg" 
 				}));
 
 		panel.add(chkSort);
@@ -121,7 +120,7 @@ public abstract class PanelSearchPcode extends JPanel {
 
 	private JComponent compKeyword(){
 		JPanel panel = new JPanel();
-		JButton btnSearchKeyWord = new JButton("搜尋關鍵字");
+		JButton btnSearchKeyWord = new JButton("搜尋品種關鍵字");
 		txfKeyword.setColumns(10);
 		panel.add(txfKeyword);
 		panel.add(btnSearchKeyWord);
@@ -150,16 +149,23 @@ public abstract class PanelSearchPcode extends JPanel {
 		if (IMAGEMODE == SHOWIMAGE) this.add(panelImage);
 		this.add(panelFilter);
 		this.add(panelList);
-
-		ActionListener actl = new ActionListener() {
+		
+		chkSort.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (chkSort.isSelected())
+					cbxSort.setEnabled(true);
+				else
+					cbxSort.setEnabled(false);
+				updateList();
+			}
+		});	
+		
+		cbxSort.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				updateList();
 			}
-		};	
-		
-		
-		chkSort.addActionListener(actl);
-		cbxSort.addActionListener(actl);
+		});	
+		cbxSort.setEnabled(false); //set disabled by default
 						
 		if (IMAGEMODE == SHOWIMAGE) panelImage.add(lblimg);
 		if (IMAGEMODE == SHOWIMAGE) lblimg.setVerticalAlignment(SwingConstants.TOP);
@@ -191,7 +197,7 @@ public abstract class PanelSearchPcode extends JPanel {
 					
 					if (IMAGEMODE == SHOWIMAGE) lblimg.setIcon(db.getImage_by_pcode(selectedpcode));
 					//------------IMPORTANT----------------
-					updateChart(); //need to be implemented!!!!!
+					update(); //need to be implemented!!!!!
 					//-------------------------------------
 				}
 
@@ -202,6 +208,6 @@ public abstract class PanelSearchPcode extends JPanel {
 	
 	}
 
-	public abstract void updateChart();
+	public abstract void update();
 	
 }

@@ -1,5 +1,4 @@
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 
@@ -12,28 +11,24 @@ import javax.swing.JTable;
 import javax.swing.RowSorter;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import javax.swing.ScrollPaneConstants;
 
-import java.awt.GridLayout;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Vector;
 
 
 public class RecordView extends JDialog {
 
+
+	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
-	private MyModel model;
+	private MyTableModel model;
 	JTable atable = new JTable()
     {
         @Override
@@ -99,9 +94,9 @@ public class RecordView extends JDialog {
 		contentPanel.setLayout(null);
 		{
 
-			 this.model = new MyModel(rs);
+			 this.model = new MyTableModel(rs);
 			 atable.setModel(model);
-			    RowSorter<MyModel> sorter = new TableRowSorter<MyModel>(model);
+			    RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
 			    atable.setRowSorter(sorter);
 			    
 			 JScrollPane scrollPane = new JScrollPane(atable);
@@ -128,75 +123,10 @@ public class RecordView extends JDialog {
 	}
 	
 	public void setResultSet(ResultSet rs){
-		 this.model = new MyModel(rs);
+		 this.model = new MyTableModel(rs);
 		 atable.setModel(model);		
 	}
 	
 }
 
-// class that extends the AbstractTableModel
-class MyModel extends AbstractTableModel {
-		
-	// to store our elements it will be great to avoid parallel array and use 
-	// an ArrayList<Animal> but for simplicity and not to have to add a new 
-	// class with will use an ArrayList<Object> for each row
-	private KYutil u = new KYutil();
-	Vector<Vector> rows = new Vector<Vector>();
-	Vector<String> header = new Vector<String>();
-	
-	
-	// constructor 
-	MyModel(ResultSet rs) {
-		ResultSetMetaData rsmd;
-		int colNo=0;
-		Vector<Object> rowvec = new Vector<Object>();
-		
-		try {
-			rsmd = rs.getMetaData();
-			colNo = rsmd.getColumnCount();
-			for (int h=1;h<=colNo;h++){
-				u.debug("total:"+colNo+"  col:"+h + "   head:"+rsmd.getColumnName(h));
-				header.add(rsmd.getColumnName(h));
-			}
 
-			while(rs.next()){
-				rowvec = new Vector<Object>();
-				for (int i=0;i<colNo;i++){
-					rowvec.add(rs.getObject(i+1));
-				}
-				rows.add(rowvec);
-			}
-			rs.close();
-		
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-	}
-	
-	
-	// method that needs to be overload. The row count is the size of the ArrayList
-	public int getRowCount() {
-		return rows.size();
-	}
-
-	// method that needs to be overload. The column count is the size of our header
-	public int getColumnCount() {
-		return header.size();
-	}
-
-	// method that needs to be overload. The object is in the arrayList at rowIndex
-	public String getValueAt(int rowIndex, int columnIndex) {
-		return rows.get(rowIndex).get(columnIndex).toString();
-	}
-	
-	public Vector<String> getRow(int rowIndex) {
-		return rows.get(rowIndex);
-	}
-	// a method to return the column name 
-	public String getColumnName(int index) {
-		return header.get(index);
-	}
-	
-
-}

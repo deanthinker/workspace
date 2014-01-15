@@ -61,7 +61,7 @@ public class PanelDOMForecast extends JPanel {
 	
 	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE){
 		private static final long serialVersionUID = 1L;
-		public void updateChart() {
+		public void update() {
 			final XYDataset tdataset = getJFCdataset_forecast();
 			final JFreeChart tchart = getJFCchart_forecast(tdataset);
 			final ChartPanel jfcPanel = new ChartPanel(tchart);

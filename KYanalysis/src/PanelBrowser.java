@@ -31,7 +31,7 @@ public class PanelBrowser extends JPanel {
 	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE)
 	{
 		private static final long serialVersionUID = 1L;
-		public void updateChart() {
+		public void update() {
 			String ys =  panelyr.getYS();
 			String ye =  panelyr.getYE();
 			u.debug("pcode: "+ selectedpcode);

@@ -62,7 +62,7 @@ public class PanelInventory extends JPanel {
 	
 	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE){
 		private static final long serialVersionUID = 1L;
-		public void updateChart() {
+		public void update() {
 			//ฝdจา
 			/*
 			final XYDataset tdataset = getJFCdataset();

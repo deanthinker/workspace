@@ -891,9 +891,11 @@ public class Start {
 		tabbedPane.addTab("外銷預購/供給", null, new PanelEXPForecast(), null);
 		tabbedPane.addTab("內銷預購/供給", null, new PanelDOMForecast(), null);
 		tabbedPane.addTab("進價/售價/毛利", null, new PanelProductAnalysis(),	null);
+		tabbedPane.addTab("客戶分析", null, new PanelCustAnalysis(), null);
 		tabbedPane.addTab("生產計劃", null, makeProductionTabPanel(), null);
 		tabbedPane.addTab("統計排名", null, makeStatisticsTabPanel(), null);
 		tabbedPane.addTab("銷售版圖", null, new PanelBrowser(), null);
+		
 		//tabbedPane.addTab("----", null, new PanelInventory(), null);
 
 		mainFrame.getContentPane().add(tabbedPane);
