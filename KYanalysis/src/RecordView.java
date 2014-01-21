@@ -29,6 +29,8 @@ public class RecordView extends JDialog {
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
 	private MyTableModel model;
+	
+	
 	JTable atable = new JTable()
     {
         @Override
@@ -52,9 +54,8 @@ public class RecordView extends JDialog {
 		}
 	}
 */
-	/**
-	 * Create the dialog.
-	 */
+
+      
 	public RecordView() {
 		setBounds(50, 50, 800, 400);
 		getContentPane().setLayout(new BorderLayout());
@@ -94,16 +95,16 @@ public class RecordView extends JDialog {
 		contentPanel.setLayout(null);
 		{
 
-			 this.model = new MyTableModel(rs);
-			 atable.setModel(model);
-			    RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
-			    atable.setRowSorter(sorter);
-			    
-			 JScrollPane scrollPane = new JScrollPane(atable);
-			 scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-			 scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-			 getContentPane().add(scrollPane);
-					
+			model = new MyTableModel(rs);
+			atable.setModel(model);
+			RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
+			atable.setRowSorter(sorter);
+
+			JScrollPane scrollPane = new JScrollPane(atable);
+			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+			getContentPane().add(scrollPane);
+
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -123,7 +124,7 @@ public class RecordView extends JDialog {
 	}
 	
 	public void setResultSet(ResultSet rs){
-		 this.model = new MyTableModel(rs);
+		 model = new MyTableModel(rs);
 		 atable.setModel(model);		
 	}
 	

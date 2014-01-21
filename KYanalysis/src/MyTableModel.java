@@ -20,9 +20,16 @@ class MyTableModel extends AbstractTableModel {
 	
 	// constructor 
 	MyTableModel(ResultSet rs) {
+		setResultSet(rs);
+		
+	}
+	
+	public void setResultSet(ResultSet rs){
 		ResultSetMetaData rsmd;
 		int colNo=0;
 		Vector<Object> rowvec = new Vector<Object>();
+		rows.removeAllElements();
+		header.removeAllElements();
 		
 		try {
 			rsmd = rs.getMetaData();
@@ -39,14 +46,13 @@ class MyTableModel extends AbstractTableModel {
 				}
 				rows.add(rowvec);
 			}
+
 			rs.close();
 		
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-		
+		}		
 	}
-	
 	
 	// method that needs to be overload. The row count is the size of the ArrayList
 	public int getRowCount() {

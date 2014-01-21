@@ -24,17 +24,17 @@ public class PanelCustAnalysis extends JPanel {
 	
 	private JScrollPane lefttop, leftbot, righttop, rightbot;
 	
-	private PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE){
+	private PanelSearchCust panelSearchCust = new PanelSearchCust(){
 		private static final long serialVersionUID = 1L;
 		public void update() {
 			
 		}
 	};	
-	
-	private PanelSearchCust panelSearchCust = new PanelSearchCust(){
+
+	private PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE){
 		private static final long serialVersionUID = 1L;
 		public void update() {
-			
+			panelSearchCust.setPcode(selectedpcode);
 		}
 	};	
 	
@@ -60,23 +60,26 @@ public class PanelCustAnalysis extends JPanel {
 	
 	
 	public PanelCustAnalysis() {
+		this.setLayout(new GridLayout(1, 1, 0, 0));
 		//split frame into left and right panel, each panel is then split into top and bottom
 		lefttop = new JScrollPane(createLeftTopPanel());
 		leftbot = new JScrollPane(createLeftBotPanel());
 		righttop = new JScrollPane(createRightTopPanel());
 		rightbot = new JScrollPane(createRightBotPanel());
-		
+
 		leftsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, lefttop, leftbot);
 		rightsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, righttop, rightbot);
 
+		rightsplit.setDividerLocation(300);
+		leftsplit.setDividerLocation(300);
+		
 		leftsplit.add(lefttop, "top"); 
 		leftsplit.add(leftbot, "bottom");
 		
-		
-		this.setLayout(new GridLayout(1, 1, 0, 0));
+
 		JSplitPane splitpanel = new JSplitPane();
 		
-		splitpanel.setDividerLocation(350);
+		splitpanel.setDividerLocation(450);
 		splitpanel.add(leftsplit, "left");
 		splitpanel.add(rightsplit, "right");
 		

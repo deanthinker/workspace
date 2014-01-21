@@ -1,6 +1,13 @@
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -8,22 +15,34 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.RowSorter;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import javax.swing.ListSelectionModel;
 
 
 public abstract class PanelSearchCust extends JPanel {
-
-	public JTextField txfKeyword = new JTextField();
-	public JCheckBox chkSort = new JCheckBox("排序");
-	public JComboBox<String> cbxSort = new JComboBox<String>();
-	public PanelYearRange panelyr = new PanelYearRange("統計期間");
+	private JLabel lbltitle = new JLabel();
+	private JTextField txfKeyword = new JTextField();
+	private JCheckBox chkSort = new JCheckBox("排序");
+	private JComboBox<String> cbxSort = new JComboBox<String>();
+	private PanelYearRange panelyr = new PanelYearRange("統計期間");
+	private String selectedpcode = ""; 
 	
-	private MyTableModel model;
+	private KYdb db = new KYdb();
+	private KYutil u = new KYutil();
+	
+	private MyTableModel model = new MyTableModel(db.getResultset_customer_all(null));
 	private JTable atable = new JTable();
-	
-	
+	public String selectedcustcode = "";
+	public String title = "";
+	/*
 	public static void main(String[] args) {
 		KYdb db = new KYdb();
 		try {
@@ -42,15 +61,16 @@ public abstract class PanelSearchCust extends JPanel {
 			e.printStackTrace();
 		}
 	}
-	
+	*/
 	public PanelSearchCust() {
+
 		this.setLayout(new GridLayout(2, 0, 0, 0));
 		JPanel panelFilter = new JPanel();
 		JPanel panelTable = new JPanel();
 		this.add(panelFilter);
 		this.add(panelTable);
 
-		panelFilter.setLayout(new GridLayout(3, 0, 0, 0));
+		
 		
 		chkSort.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -70,16 +90,97 @@ public abstract class PanelSearchCust extends JPanel {
 		
 		cbxSort.setEnabled(false); //set disabled by default
 		
+		panelFilter.setLayout(new GridLayout(3, 0, 0, 0));
 		panelFilter.add(compKeyword());
 		panelFilter.add(panelyr);
 		panelFilter.add(compSort());
 		
-		
+		panelTable.setLayout(new GridLayout(1, 1, 0, 0));
+		panelTable.add(compTable());
+
 		
 	}
 	
+	public void setPcode(String pcode){
+		selectedpcode = pcode;
+		title = "以下為品種"+pcode+"的客戶清單";
+		lbltitle.setText(title);
+		updateList();
+	}
+	
 	private void updateList(){
+		if (chkSort.isSelected()){
+				cbxSort.setEnabled(true);
+				model = null; System.gc(); //free the memory
+				String filter = null;
+				
+				if (txfKeyword.getText().length()==0)
+					filter = "";
+				else
+					filter = "custcode like '%" + txfKeyword.getText() + "%' or cust_name like '%" + txfKeyword.getText() + "%' and";
+				
+				switch (cbxSort.getSelectedIndex()){
+					case 0: //sales
+						model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tsales"));
+						resetTableModel(model);
+						System.out.println("record count:"+model.getRowCount());
+						break;
+						
+					case 1: //weight
+						model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
+						resetTableModel(model);
+						System.out.println("record count:"+model.getRowCount());
+						break;
+				}
+		}
+
+		txfKeyword.setText("");
+	}
+	
+	private void resetTableModel(MyTableModel m){
+		atable.setModel(m);	
+		RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(m);
+		atable.setRowSorter(sorter);
 		
+	}
+	
+	private JComponent compTable(){
+		JPanel tablepane = new JPanel(new BorderLayout());
+		tablepane.add(lbltitle, BorderLayout.NORTH);
+		atable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		atable.setModel(model);	
+		RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
+		atable.setRowSorter(sorter);
+		
+		DefaultTableCellRenderer renderer = (DefaultTableCellRenderer)atable.getDefaultRenderer(Object.class);
+		renderer.setHorizontalAlignment( JLabel.RIGHT );
+		
+		JScrollPane scrollPane = new JScrollPane(atable);
+		scrollPane.setPreferredSize(new Dimension(50,100));
+		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		atable.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(final MouseEvent e)
+			{
+				if (e.getClickCount() == 1)
+				{
+					final JTable target = (JTable)e.getSource();
+					final int row = target.getSelectedRow();
+					//final int column = target.getSelectedColumn();
+					final int column = 0; //custcode
+					selectedcustcode = (String)target.getValueAt(row, column);
+					//------------IMPORTANT----------------
+					update(); //need to be implemented!!!!!
+					//-------------------------------------
+					u.debug (selectedcustcode);
+				}
+			}
+
+		});	
+		tablepane.add(scrollPane, BorderLayout.CENTER);
+		
+		return tablepane;
 	}
 	
 	private JComponent compKeyword(){
@@ -92,7 +193,15 @@ public abstract class PanelSearchCust extends JPanel {
 		
 		ActionListener actl = new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				String k = txfKeyword.getText();
+				String filter = "custcode like '%" + k + "%' or cust_name like '%" + k + "%' and ";
 				
+				model = null; System.gc(); //free the memory
+				//model = new MyTableModel(db.getResultset_customer_all(filter));
+				model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
+				resetTableModel(model);
+				System.out.println("record count:"+model.getRowCount());
+
 			}
 		};
 		
@@ -103,16 +212,22 @@ public abstract class PanelSearchCust extends JPanel {
 	}
 	private JComponent compSort(){
 		JPanel panel = new JPanel();
-
+		JPanel topp = new JPanel();
+		JPanel downp = new JPanel();
+		panel.setLayout(new GridLayout(0, 1, 0, 0));
+		
 		cbxSort.setModel(new DefaultComboBoxModel<String>(new String[] 
 				{
 				"年銷售總額NT$", 
-				"年銷售總重Kg" 
+				"年銷售總重Kg"
 				}));
+		panel.add(topp);
+		panel.add(downp);
+		topp.add(chkSort);
+		topp.add(cbxSort);
 
-		panel.add(chkSort);
-		panel.add(cbxSort);
 		return panel;
 	}	
+
 	public abstract void update();
 }

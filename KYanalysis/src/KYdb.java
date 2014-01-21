@@ -38,6 +38,7 @@ public class KYdb {
 		con = c;
 	}
 	
+	
 	public Connection getConnection(){
 		return this.con;
 	}
@@ -897,7 +898,115 @@ public class KYdb {
 		}
 		
 		return rs;
-	}		
+	}
+	
+	
+	public ResultSet getResultset_customer_all(String filter){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		
+		if (filter == null)
+			sql = "SELECT distinct custcode, cust_name, cust_country from sao430";
+		else
+			sql = "SELECT distinct custcode, cust_name, cust_country from sao430 where " + filter;
+		
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_allcustomers Exception :" + e.toString());
+		}
+		
+		return rs;		
+	}
+
+	public ResultSet getResultset_CustSales(String ys, String ye, String custcode, String pcode, String crop){
+		//ys and ye are mandatory
+		//(2012,2013, "ABC", null, null) get ABC sales figure between year 2012~2013
+		//(2012,2013, "ABC", null, "西瓜") get ABC watermelon sales figure between year 2012~2013
+		//(2012,2013, null, null, "西瓜") get all watermelon sales figure between year 2012~2013
+		//(2012,2013, null, "0786", "西瓜") retrun nothing, because 0786 is papaya 
+		
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		String pcodefilter = "";
+		String cropfilter = "";
+		String custcodefilter = "";
+		String group = "custcode";
+		
+		if (pcode!=null)  {
+			pcodefilter = " pcode = '" + pcode + "' and ";
+			group = "pcode";
+		}
+		if (crop!=null)  {
+			cropfilter = " level2 = '" + crop + "' and ";
+			group = "level2";
+		}
+		if (custcode!=null)  {
+			custcodefilter = " custcode = '" + custcode + "' and ";
+			group = "custcode";
+		}
+		
+		sql = "SELECT custcode, cust_name, format(tsales,1) as '銷售額($US)', format(tweight,1) as '銷售重(Kg)' from " 
+				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+				+" (SELECT *, year(invoice_date) as year, (unit_price * toUSrate * total_weight) as total from sao430 " 
+				+" where " + pcodefilter + cropfilter + custcodefilter
+				+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+				+" group by "+group+ " ) as t2 ";
+		
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_CustSales Exception :" + e.toString());
+		}
+		
+		return rs;			
+	}
+	
+	public ResultSet getResultset_customer_pcode(String pcode, String ys, String ye, String filter, String order){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		if (filter == null) filter = ""; //make it a zero length so that can be added to the string
+		
+		if (pcode.length()==0){
+			sql = "SELECT custcode, cust_name, format(tsales/10000,1) as '銷售額(萬)', format(tweight,1) as '銷售重(Kg)' from " 
+					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_weight) as total from sao430 " 
+					+" where " + filter
+					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+					+" group by custcode) as t2 "
+					+" order by "+order+" desc ";
+		}
+		else{
+			sql = "SELECT custcode, cust_name, format(tsales/10000,1) as '銷售額(萬)', format(tweight,1) as '銷售重(Kg)', format(tsales/tweight,1) as '平均單價' from " 
+					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_weight) as total from sao430 " 
+					+" where " + filter
+					+" pcode = '"+pcode+"' and  year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+					+" group by custcode) as t2 "
+					+" order by "+order+" desc ";
+		}
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_customer_pcode Exception :" + e.toString());
+		}
+		
+		return rs;		
+	}
+	
+	
 	public ResultSet getResultset_dom430(String pcode, String year){
 		Statement stat = null;
 		ResultSet rs = null;
