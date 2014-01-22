@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -925,38 +926,65 @@ public class KYdb {
 
 	public ResultSet getResultset_CustSales(String ys, String ye, String custcode, String pcode, String crop){
 		//ys and ye are mandatory
-		//(2012,2013, "ABC", null, null) get ABC sales figure between year 2012~2013
-		//(2012,2013, "ABC", null, "西瓜") get ABC watermelon sales figure between year 2012~2013
-		//(2012,2013, null, null, "西瓜") get all watermelon sales figure between year 2012~2013
-		//(2012,2013, null, "0786", "西瓜") retrun nothing, because 0786 is papaya 
-		
+		//5 cases
+		//1(2012,2013, "ABC", null, "all") get ABC sales group by crop figure between year 2012~2013
+		//2(2012,2013, "ABC", null, null) get ABC sales figure between year 2012~2013
+		//3(2012,2013, "ABC", null, "西瓜") get ABC watermelon sales figure between year 2012~2013
+		//4(2012,2013, null, null, "西瓜") get all watermelon sales figure between year 2012~2013
+		//5(2012,2013, null, "0786", null) sales of 0786 between year 2012~2013
+		//6(2012,2013, null, null, null) total sales between year 2012~2013
+				
 		Statement stat = null;
 		ResultSet rs = null;
 		String sql = "";
 		String pcodefilter = "";
 		String cropfilter = "";
 		String custcodefilter = "";
-		String group = "custcode";
+		String groupby = "group by custcode"; //case 2
+		String select = "level2 ";
+		String totalSales = "";
+		String custSales = "";
 		
-		if (pcode!=null)  {
-			pcodefilter = " pcode = '" + pcode + "' and ";
-			group = "pcode";
-		}
-		if (crop!=null)  {
+		if (custcode!=null)	custcodefilter = " custcode = '" + custcode + "' and ";
+		if (crop!=null && crop.equalsIgnoreCase("all")==false)	
 			cropfilter = " level2 = '" + crop + "' and ";
-			group = "level2";
+		if (pcode!=null)	pcodefilter = " pcode = '" + pcode + "' and ";
+
+		if (custcode!=null && pcode==null && crop.equalsIgnoreCase("all")){
+			groupby = "group by custcode, level2 "; //case 1
+			select = "level2, ";
 		}
-		if (custcode!=null)  {
-			custcodefilter = " custcode = '" + custcode + "' and ";
-			group = "custcode";
+		if (custcode!=null && pcode==null && crop==null){ //case 2
+			groupby = "group by custcode ";
+			select = "custcode, cust_name, ";
+		}
+			
+		if (custcode==null && pcode==null && crop!=null){ //case 4
+			groupby = "";
+			select = "level2, ";
+		}
+		if (custcode==null && pcode!=null && crop==null){ //case 5
+			groupby = "";
+			select = "pcode, level2, pcname, ";
+		}
+		if (custcode==null && pcode==null && crop==null){ //case 6
+			groupby = "";
+			select = "";
 		}
 		
-		sql = "SELECT custcode, cust_name, format(tsales,1) as '銷售額($US)', format(tweight,1) as '銷售重(Kg)' from " 
+		totalSales = getYearRangeSales(ys,ye);
+		if (custcode!=null)
+			custSales = getYearRangeSalesByCust(ys,ye,custcode);
+		
+		debug("totalSales:"+totalSales + "\t custSales:"+custSales);
+		BigInteger t = new BigInteger("100");
+		
+		sql = "SELECT "+ select + " format(tweight,1) as '銷售重(Kg)', format(tsales/10000,1) as '銷售額(萬)', round((tsales/"+custSales +")*100) as '銷售佔比%' from " 
 				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
-				+" (SELECT *, year(invoice_date) as year, (unit_price * toUSrate * total_weight) as total from sao430 " 
+				+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
 				+" where " + pcodefilter + cropfilter + custcodefilter
 				+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
-				+" group by "+group+ " ) as t2 ";
+				+ groupby + " ) as t2 order by tsales desc";
 		
 		debug(sql);
 
@@ -970,6 +998,63 @@ public class KYdb {
 		return rs;			
 	}
 	
+	public String getYearRangeSalesByCust(String ys, String ye, String custcode){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = null;
+		String sales ="";
+		
+		sql = "SELECT format(tweight,1) as soldkg, format(tsales,1) as sales from " 
+				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+				+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
+				+" where custcode = '" +custcode + "' and "
+				+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+				+  " ) as t2 ";
+		debug(sql);
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while(rs.next()){
+				sales = rs.getString("sales").replace(",", "");
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getYearRangeSalesByCust Exception :" + e.toString());
+		}
+		
+		return sales;
+	}
+
+	public String getYearRangeSales(String ys, String ye){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = null;
+		String sales ="";
+		
+		
+		sql = "SELECT format(tweight,1) as soldkg, format(tsales,1) as sales from " 
+				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+				+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
+				+" where year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+				+  " ) as t2 ";
+		debug(sql);
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while(rs.next()){
+				sales = rs.getString("sales").replace(",", "");
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getYearRangeSales Exception :" + e.toString());
+		}
+		
+		return sales;
+	}
+	
+	
 	public ResultSet getResultset_customer_pcode(String pcode, String ys, String ye, String filter, String order){
 		Statement stat = null;
 		ResultSet rs = null;
@@ -979,7 +1064,7 @@ public class KYdb {
 		if (pcode.length()==0){
 			sql = "SELECT custcode, cust_name, format(tsales/10000,1) as '銷售額(萬)', format(tweight,1) as '銷售重(Kg)' from " 
 					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
-					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_weight) as total from sao430 " 
+					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
 					+" where " + filter
 					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
 					+" group by custcode) as t2 "
@@ -988,7 +1073,7 @@ public class KYdb {
 		else{
 			sql = "SELECT custcode, cust_name, format(tsales/10000,1) as '銷售額(萬)', format(tweight,1) as '銷售重(Kg)', format(tsales/tweight,1) as '平均單價' from " 
 					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
-					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_weight) as total from sao430 " 
+					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
 					+" where " + filter
 					+" pcode = '"+pcode+"' and  year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
 					+" group by custcode) as t2 "
