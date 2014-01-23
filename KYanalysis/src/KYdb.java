@@ -923,7 +923,33 @@ public class KYdb {
 		
 		return rs;		
 	}
+	
+	public ResultSet getResultset_CustVarietySales(String ys, String ye, String custcode, String crop){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		
+		//return a list of variety sales
+		sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as 'sales' from " 
+				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+				+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
+				+" where custcode = '" + custcode + "' and level2 = '" + crop + "' and "
+				+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+				+ " group by pcode ) as t2 order by tsales desc";
+		
+		debug(sql);
 
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_CustVarietySales Exception :" + e.toString());
+		}
+		
+		return rs;	
+	}
+	
+	
 	public ResultSet getResultset_CustSales(String ys, String ye, String custcode, String pcode, String crop){
 		//ys and ye are mandatory
 		//5 cases
