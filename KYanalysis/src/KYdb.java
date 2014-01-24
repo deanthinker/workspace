@@ -883,7 +883,7 @@ public class KYdb {
 		Statement stat = null;
 		ResultSet rs = null;
 		float avgntcost = 0;
-		String sql = "SELECT pcode, level2, pcname, invoice_date, custcode, dest_country, "
+		String sql = "SELECT pcode, level2, pcname, pename, invoice_date, custcode, dest_country, "
 				+ " total_weight as qty, "
 				+ " CONCAT('$', FORMAT(((unit_price * toNTrate)), 0)) as NTpricePerKg " 
 				+ " FROM market.sao430  where "
@@ -900,7 +900,26 @@ public class KYdb {
 		
 		return rs;
 	}
-	
+
+	public ResultSet getResultset_cust_sales_detail(String custcode, String ys, String ye, String crop){
+		Statement stat = null;
+		ResultSet rs = null;
+		float avgntcost = 0;
+		String sql ="select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
+				+ "format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
+				+ "from sao430 where custcode = '"+ custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye ;
+		
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_cust_sales_detail Exception :" + e.toString());
+		}
+		
+		return rs;
+	}
 	
 	public ResultSet getResultset_customer_all(String filter){
 		Statement stat = null;
@@ -1001,7 +1020,7 @@ public class KYdb {
 		totalSales = getYearRangeSales(ys,ye);
 		if (custcode!=null)
 			custSales = getYearRangeSalesByCust(ys,ye,custcode);
-		
+				
 		debug("totalSales:"+totalSales + "\t custSales:"+custSales);
 		BigInteger t = new BigInteger("100");
 		
@@ -1024,11 +1043,13 @@ public class KYdb {
 		return rs;			
 	}
 	
+	
+	
 	public String getYearRangeSalesByCust(String ys, String ye, String custcode){
 		Statement stat = null;
 		ResultSet rs = null;
 		String sql = null;
-		String sales ="";
+		String sales = "0";
 		
 		sql = "SELECT format(tweight,1) as soldkg, format(tsales,1) as sales from " 
 				+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
@@ -1041,7 +1062,8 @@ public class KYdb {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
 			while(rs.next()){
-				sales = rs.getString("sales").replace(",", "");
+				if (rs.getString("sales")!=null)
+					sales = rs.getString("sales").replace(",", "");
 			}
 			rs.close();
 			stat.close();
@@ -1056,7 +1078,7 @@ public class KYdb {
 		Statement stat = null;
 		ResultSet rs = null;
 		String sql = null;
-		String sales ="";
+		String sales ="0";
 		
 		
 		sql = "SELECT format(tweight,1) as soldkg, format(tsales,1) as sales from " 
@@ -1069,7 +1091,8 @@ public class KYdb {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
 			while(rs.next()){
-				sales = rs.getString("sales").replace(",", "");
+				if (rs.getString("sales")!=null)
+					sales = rs.getString("sales").replace(",", "");
 			}
 			rs.close();
 			stat.close();

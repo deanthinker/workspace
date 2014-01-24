@@ -20,6 +20,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 
 import org.jfree.chart.ChartFactory;
@@ -47,6 +48,7 @@ public abstract class PanelCustInfo extends JPanel {
 	public String ye;
 	private String totalSales = "";
 	private String custSales = "";
+	private String cropSales = "";
 	private MyTableModel model = null;
 	//private MyTableModel model = new MyTableModel(db.getResultset_CustSales("2013","2013","AE",null,"all"));
 	private JLabel lbltitle = new JLabel();
@@ -71,7 +73,7 @@ public abstract class PanelCustInfo extends JPanel {
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			
 			//pcust.updateTable("2013","2013","TK",null,"all"); //test1
-			pcust.updateTable("2013","2013","KYD",null,"all"); //test2
+			pcust.setCustcode("2013","2013","KYD",null,"all"); //test2
 			pcust.refreshCustSalesChart();
 			pcust.refreshCustVarietySalesChart();
 			
@@ -130,7 +132,7 @@ public abstract class PanelCustInfo extends JPanel {
 
 		JFreeChart chart = ChartFactory.createPieChart(title, // chart title
 				dataset, // data
-				true, // include legend
+				false, // include legend
 				true, false);
 
 		final PiePlot plot = (PiePlot) chart.getPlot();
@@ -153,14 +155,12 @@ public abstract class PanelCustInfo extends JPanel {
 		standardChartTheme.setLargeFont(new Font("新細明體", Font.BOLD, 13));
 		ChartFactory.setChartTheme(standardChartTheme);
 		String title = "";
-		BigDecimal wan = new BigDecimal(10000);
-		BigDecimal cs = new BigDecimal(custSales).divide(wan);
 		
-		title = selectedcrop+" 品種占比\n 合計 NT$" + cs.toString() + "萬元";
+		title = selectedcrop+" 品種占比\n 合計 NT$" + cropSales + "萬元";
 
 		JFreeChart chart = ChartFactory.createPieChart(title, // chart title
 				dataset, // data
-				true, // include legend
+				false, // include legend
 				true, false);
 
 		final PiePlot plot = (PiePlot) chart.getPlot();
@@ -178,6 +178,8 @@ public abstract class PanelCustInfo extends JPanel {
 
 	private DefaultPieDataset getJFCdataset_custVarietySales() {
 		DefaultPieDataset dataset = new DefaultPieDataset();
+		String cropname = "";
+		float cropsales = 0;
 		if (selectedcrop == null)  return dataset;
 		
 		ResultSet rs = db.getResultset_CustVarietySales(ys, ye, custcode, selectedcrop);
@@ -185,7 +187,9 @@ public abstract class PanelCustInfo extends JPanel {
 
 		try {
 			while(rs.next()){
-				dataset.setValue(rs.getString("pcname"), rs.getFloat("sales"));
+				cropname = rs.getString("pcname");
+				cropsales = Float.valueOf(rs.getString("sales").replace(",", ""));
+				dataset.setValue(cropname, cropsales);
 			}
 			rs.close();	
 		} catch (SQLException e) {
@@ -236,9 +240,10 @@ public abstract class PanelCustInfo extends JPanel {
 		renderer.setHorizontalAlignment( JLabel.RIGHT );
 		
 		JScrollPane scrollPane = new JScrollPane(atable);
-		scrollPane.setPreferredSize(new Dimension(50,100));
+		
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		//scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		
 		atable.addMouseListener(new MouseAdapter()
 		{
 			public void mouseClicked(final MouseEvent e)
@@ -248,8 +253,8 @@ public abstract class PanelCustInfo extends JPanel {
 					final JTable target = (JTable)e.getSource();
 					final int row = target.getSelectedRow();
 					//final int column = target.getSelectedColumn();
-					final int column = 0; //custcode
-					selectedcrop = (String)target.getValueAt(row, column);
+					selectedcrop = (String)target.getValueAt(row, 0);
+					cropSales = (String)target.getValueAt(row, 2);
 					//------------IMPORTANT----------------
 					update(); //need to be implemented!!!!!
 					//-------------------------------------
@@ -282,7 +287,7 @@ public abstract class PanelCustInfo extends JPanel {
 		refreshCustSalesChart();
 	}
 
-	private void updateTable(String ys, String ye, String custcode, String pcode, String crop){
+	public void setCustcode(String ys, String ye, String custcode, String pcode, String crop){
 		this.ys = ys;
 		this.ye = ye;
 		this.custcode = custcode;
@@ -294,13 +299,21 @@ public abstract class PanelCustInfo extends JPanel {
 		atable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		atable.setModel(model);	
 		RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
-		atable.setRowSorter(sorter);	
+		atable.setRowSorter(sorter);
+		setColumnWidth();
 		
 		this.totalSales = db.getYearRangeSales(ys,ye);
 		this.custSales = db.getYearRangeSalesByCust(ys,ye,custcode);
 		setTitle();
 	}
-	
+	private void setColumnWidth(){
+		TableColumn column = null;
+		for (int c=0;c<atable.getColumnCount();c++){
+			column = atable.getColumnModel().getColumn(c);
+			column.setPreferredWidth(100);
+		}
+		
+	}
 	static class PieChartLabel implements PieSectionLabelGenerator {
 		private int percent = 1;
 		

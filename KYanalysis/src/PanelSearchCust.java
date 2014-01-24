@@ -32,7 +32,7 @@ public abstract class PanelSearchCust extends JPanel {
 	private JTextField txfKeyword = new JTextField();
 	private JCheckBox chkSort = new JCheckBox("排序");
 	private JComboBox<String> cbxSort = new JComboBox<String>();
-	private PanelYearRange panelyr = new PanelYearRange("統計期間");
+	public PanelYearRange panelyr = new PanelYearRange("統計期間");
 	private String selectedpcode = ""; 
 	
 	private KYdb db = new KYdb();
