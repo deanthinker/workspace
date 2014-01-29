@@ -190,8 +190,7 @@ public class Start {
 	private int selectedlevel2Index = -1;
 
 	private Connection con = null; // Database objects
-	
-	
+		
 	private JComboBox<String> cbxProductionYS; // comboBox for production start year
 	private JComboBox<String> cbxProductionYE; // comboBox for production end year
 	private JComboBox<String> cbxStatYS; // comboBox for production start year
@@ -212,8 +211,7 @@ public class Start {
 	private JRadioButton radStatValueProfit;
 	private JRadioButton radStatValueGP;
 	private JRadioButton radStatValuePrice;
-	
-	
+		
 	private JPanel panelChartProduction = null;
 	public int YEAR_RANGE = 10;
 	public int YE = Calendar.getInstance().get(Calendar.YEAR); // end year

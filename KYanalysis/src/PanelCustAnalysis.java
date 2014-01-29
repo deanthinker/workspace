@@ -32,8 +32,8 @@ public class PanelCustAnalysis extends JPanel {
 	private PanelSearchCust panelSearchCust = new PanelSearchCust(){
 		private static final long serialVersionUID = 1L;
 		public void update() {
-			panelCustInfo.setCustcode(panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); //test2
-			
+			panelCustInfo.setCustcode(panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); 
+			panelCustSales.setCustcode(panelyr.getYS(), panelyr.getYE(), selectedcustcode, null);
 		}
 	};	
 
@@ -51,6 +51,12 @@ public class PanelCustAnalysis extends JPanel {
 		}
 	};	
 	
+	private PanelCustSalesRecord panelCustSales = new PanelCustSalesRecord(){
+		private static final long serialVersionUID = 1L;
+		public void update() {
+			
+		}		
+	};
 	
 	private JPanel createLeftTopPanel(){		//pcode search
 		JPanel panel = new JPanel(new GridLayout(1, 1, 0, 0));
@@ -70,6 +76,7 @@ public class PanelCustAnalysis extends JPanel {
 	}
 	private JPanel createRightBotPanel(){		//purchase history
 		JPanel panel = new JPanel(new GridLayout(1, 1, 0, 0));
+		panel.add(panelCustSales);
 		return panel;
 	}
 	

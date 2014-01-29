@@ -270,22 +270,7 @@ public abstract class PanelCustInfo extends JPanel {
 		
 		return tablepane;
 	}
-	private void setTitle(){
-		String percent ="";
-		float tmpcs = 0;
-		float tmpts = 0;
-		
-		BigDecimal ts = new BigDecimal(totalSales);
-		tmpts = ts.divide(new BigDecimal("10000"),1).floatValue();
-		BigDecimal cs = new BigDecimal(custSales);
-		tmpcs = cs.divide(new BigDecimal("10000"),1).floatValue();
-		
-		percent = u.f1decimal(tmpcs/tmpts * 100);
-		
-		lbltitle.setText("客戶代號:" + custcode + "    統計期間:"+ys+"~"+ye);
-		lblsales.setText("銷售NT$"+  tmpcs+"萬 \t(佔營收"+ percent+ "%)");
-		refreshCustSalesChart();
-	}
+
 
 	public void setCustcode(String ys, String ye, String custcode, String pcode, String crop){
 		this.ys = ys;
@@ -305,7 +290,27 @@ public abstract class PanelCustInfo extends JPanel {
 		this.totalSales = db.getYearRangeSales(ys,ye);
 		this.custSales = db.getYearRangeSalesByCust(ys,ye,custcode);
 		setTitle();
+		paneltotalSales.removeAll(); //clean out the chart
+		paneltotalSales.repaint();
 	}
+
+	private void setTitle(){
+		String percent ="";
+		float tmpcs = 0;
+		float tmpts = 0;
+		
+		BigDecimal ts = new BigDecimal(totalSales);
+		tmpts = ts.divide(new BigDecimal("10000"),1).floatValue();
+		BigDecimal cs = new BigDecimal(custSales);
+		tmpcs = cs.divide(new BigDecimal("10000"),1).floatValue();
+		
+		percent = u.f1decimal(tmpcs/tmpts * 100);
+		
+		lbltitle.setText("客戶代號:" + custcode + "    統計期間:"+ys+"~"+ye);
+		lblsales.setText("銷售NT$"+  tmpcs+"萬 \t(佔營收"+ percent+ "%)");
+		refreshCustSalesChart();
+	}
+	
 	private void setColumnWidth(){
 		TableColumn column = null;
 		for (int c=0;c<atable.getColumnCount();c++){

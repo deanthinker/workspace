@@ -901,13 +901,21 @@ public class KYdb {
 		return rs;
 	}
 
-	public ResultSet getResultset_cust_sales_detail(String custcode, String ys, String ye, String crop){
+	public ResultSet getResultset_cust_sales_detail(String ys, String ye, String custcode, String crop){
 		Statement stat = null;
 		ResultSet rs = null;
-		float avgntcost = 0;
-		String sql ="select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
-				+ "format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
-				+ "from sao430 where custcode = '"+ custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye ;
+		String sql = "";
+		if (crop == null)
+			sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
+				+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
+				+ " from sao430 where custcode = '"+ custcode + "' and "
+				+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye ;
+		else
+			sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
+					+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
+					+ " from sao430 where custcode = '"+ custcode + "' and "
+					+ " level2 = '" + crop + "' and "
+					+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye ;
 		
 		debug(sql);
 
