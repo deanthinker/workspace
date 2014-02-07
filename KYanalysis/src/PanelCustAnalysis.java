@@ -37,7 +37,7 @@ public class PanelCustAnalysis extends JPanel {
 		}
 	};	
 
-	private PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE){
+	private PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE, PanelSearchPcode.EXPORT){
 		private static final long serialVersionUID = 1L;
 		public void update() {
 			panelSearchCust.setPcode(selectedpcode);

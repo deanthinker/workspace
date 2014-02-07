@@ -91,7 +91,7 @@ public class PanelProductAnalysis extends JPanel {
 	KYutil u = new KYutil();
 	KYdb db = new KYdb();
 	
-	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE){
+	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE, PanelSearchPcode.EXPORT){
 		private static final long serialVersionUID = 1L;
 		public void update() {
 			JFreeChart tchart = null;

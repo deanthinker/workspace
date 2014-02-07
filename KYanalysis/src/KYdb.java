@@ -587,7 +587,86 @@ public class KYdb {
 		return rs;
 	}
 
-	public void fillList_vege_prod_orderby_sales(JList list, int ys, int ye, String level2){
+	public void fillList_dom_prod_orderby_sales(JList list, int ys, int ye, String level2){
+		ResultSet rs = null;
+		Statement stat = null;
+		String sql;
+		DefaultListModel<String> listmodel = (DefaultListModel<String>) list.getModel();
+		float sales = 0;
+		if (level2 != null){
+			sql = "SELECT *, sum(packprice * actlqty) as sales, sum(actlweight) as tweight from dom430 " 
+					+ "where level2 = '" + level2 + "' and year(shipdate) >= '" + ys + "' and year(shipdate) <= '" + ye + "' "
+					+ "group by pcode order by sales desc";
+		}
+		else{
+			sql = "SELECT *, sum(packprice * actlqty) as sales, sum(actlweight) as tweight from dom430 " 
+					+ "where year(shipdate) >= '" + ys + "' and year(shipdate) <= '" + ye + "' "
+					+ "group by pcode order by sales desc";
+		}	
+					
+		u.debug(sql);
+			
+		listmodel.removeAllElements();
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			int rank=0;
+			while (rs.next()) {
+				sales = rs.getFloat("sales")/10000;
+				rank++;
+				listmodel.addElement(
+						rank + "   ,"
+						+rs.getString("pcode") + "   ,"
+						+rs.getString("level2") + "   ," 
+						+rs.getString("pcname") + "   ,"
+						+"("+  u.nf.format(sales)  +"萬)"
+						);
+			}
+		}catch (SQLException e) {u.debug("fillList_dom_prod_orderby_sales :"	+ e.toString());}
+
+		list.repaint();		
+	}	
+
+	public void fillList_dom_prod_orderby_weight(JList list, int ys, int ye, String level2){
+		ResultSet rs = null;
+		Statement stat = null;
+		String sql;
+		DefaultListModel<String> listmodel = (DefaultListModel<String>) list.getModel();
+		float sales = 0;
+		if (level2 != null){
+			sql = "SELECT *, sum(packprice * actlqty) as sales, sum(actlweight) as tweight from dom430 " 
+					+ "where level2 = '" + level2 + "' and year(shipdate) >= '" + ys + "' and year(shipdate) <= '" + ye + "' "
+					+ "group by pcode order by tweight desc";
+		}
+		else{
+			sql = "SELECT *, sum(packprice * actlqty) as sales, sum(actlweight) as tweight from dom430 " 
+					+ "where year(shipdate) >= '" + ys + "' and year(shipdate) <= '" + ye + "' "
+					+ "group by pcode order by tweight desc";
+		}	
+					
+		u.debug(sql);
+			
+		listmodel.removeAllElements();
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			int rank=0;
+			while (rs.next()) {
+				rank++;
+				listmodel.addElement(
+						rank + "   ,"
+						+rs.getString("pcode") + "   ,"
+						+rs.getString("level2") + "   ," 
+						+rs.getString("pcname") + "   ,"
+						+"("+  rs.getString("tweight")  +" Kg)"
+						);
+			}
+		}catch (SQLException e) {u.debug("fillList_dom_prod_orderby_weight :"	+ e.toString());}
+
+		list.repaint();		
+	}	
+	
+	public void fillList_exp_prod_orderby_sales(JList list, int ys, int ye, String level2){
 		ResultSet rs = null;
 		Statement stat = null;
 		String sql;
@@ -634,7 +713,7 @@ public class KYdb {
 		list.repaint();		
 	}
 	
-	public void fillList_vege_prod_orderby_weight(JList list, int ys, int ye, String level2){
+	public void fillList_exp_prod_orderby_weight(JList list, int ys, int ye, String level2){
 		ResultSet rs = null;
 		Statement stat = null;
 		String sql;

@@ -59,7 +59,7 @@ public class PanelDOMForecast extends JPanel {
 	JPanel chartpanel = new JPanel();
 	KYdb db = new KYdb();
 	
-	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE){
+	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE, PanelSearchPcode.DOMESTIC){
 		private static final long serialVersionUID = 1L;
 		public void update() {
 			final XYDataset tdataset = getJFCdataset_forecast();

@@ -240,26 +240,26 @@ public class PanelForecast_old extends JPanel {
 		
 		switch (cbxSort.getSelectedIndex()){
 			case 0: //sales,thisyear
-				db.fillList_vege_prod_orderby_sales(listVegeProd, thisyear, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_sales(listVegeProd, thisyear, nextyear, filter); break;
 			case 1: //sales,lastyear
-				db.fillList_vege_prod_orderby_sales(listVegeProd, lastyear, thisyear, filter); break;
+				db.fillList_exp_prod_orderby_sales(listVegeProd, lastyear, thisyear, filter); break;
 			case 2: //sales,this + last
-				db.fillList_vege_prod_orderby_sales(listVegeProd, lastyear, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_sales(listVegeProd, lastyear, nextyear, filter); break;
 			case 3: //sales,last2year
-				db.fillList_vege_prod_orderby_sales(listVegeProd, last2year, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_sales(listVegeProd, last2year, nextyear, filter); break;
 			case 4: //sales,last3year
-				db.fillList_vege_prod_orderby_sales(listVegeProd, last3year, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_sales(listVegeProd, last3year, nextyear, filter); break;
 	
 			case 5: //weight,thisyear
-				db.fillList_vege_prod_orderby_weight(listVegeProd, thisyear, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_weight(listVegeProd, thisyear, nextyear, filter); break;
 			case 6: //weight,lastyear
-				db.fillList_vege_prod_orderby_weight(listVegeProd, lastyear, thisyear, filter); break;
+				db.fillList_exp_prod_orderby_weight(listVegeProd, lastyear, thisyear, filter); break;
 			case 7: //weight,this + last
-				db.fillList_vege_prod_orderby_weight(listVegeProd, lastyear, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_weight(listVegeProd, lastyear, nextyear, filter); break;
 			case 8: //weight,last2year
-				db.fillList_vege_prod_orderby_weight(listVegeProd, last2year, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_weight(listVegeProd, last2year, nextyear, filter); break;
 			case 9: //weight,last3year
-				db.fillList_vege_prod_orderby_weight(listVegeProd, last3year, nextyear, filter); break;
+				db.fillList_exp_prod_orderby_weight(listVegeProd, last3year, nextyear, filter); break;
 		}
 
 		

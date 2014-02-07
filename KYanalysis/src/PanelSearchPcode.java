@@ -28,6 +28,9 @@ public abstract class PanelSearchPcode extends JPanel {
 	private static final long serialVersionUID = 1L;
 	public static final int SHOWIMAGE = 1;
 	public static final int NOIMAGE = 0;
+	public static final int EXPORT = 1;
+	public static final int DOMESTIC = 2;
+	public int DATASRC = EXPORT; 
 	
 	KYutil u = new KYutil();
 	KYdb db = new KYdb();
@@ -59,14 +62,27 @@ public abstract class PanelSearchPcode extends JPanel {
 						
 				cbxSort.setEnabled(true);
 				
-				switch (cbxSort.getSelectedIndex()){
+				if (DATASRC == EXPORT){
+					switch (cbxSort.getSelectedIndex()){
+						case 0: //sales
+							db.fillList_exp_prod_orderby_sales(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
+							break;
+							
+						case 1: //weight
+							db.fillList_exp_prod_orderby_weight(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
+							break;
+					}
+				}
+				else if (DATASRC == DOMESTIC){
+					switch (cbxSort.getSelectedIndex()){
 					case 0: //sales
-						db.fillList_vege_prod_orderby_sales(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
+						db.fillList_dom_prod_orderby_sales(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
 						break;
 						
 					case 1: //weight
-						db.fillList_vege_prod_orderby_weight(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
+						db.fillList_dom_prod_orderby_weight(listVegeProd, panelyr.getYSint(), panelyr.getYEint(), filter); 
 						break;
+				}					
 				}
 				
 		}
@@ -138,7 +154,8 @@ public abstract class PanelSearchPcode extends JPanel {
 		return panel;
 	}
 	
-	public PanelSearchPcode(final int IMAGEMODE) {
+	public PanelSearchPcode(final int IMAGEMODE, final int SRC) {
+		DATASRC = SRC;
 		if (IMAGEMODE == SHOWIMAGE) this.setLayout(new GridLayout(3, 0, 0, 0));
 		else this.setLayout(new GridLayout(2, 0, 0, 0));
 				

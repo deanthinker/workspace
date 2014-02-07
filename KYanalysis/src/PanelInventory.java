@@ -60,7 +60,7 @@ public class PanelInventory extends JPanel {
 	JPanel chartpanel = new JPanel();
 	KYdb db = new KYdb();
 	
-	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE){
+	PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.SHOWIMAGE, PanelSearchPcode.EXPORT){
 		private static final long serialVersionUID = 1L;
 		public void update() {
 			//ฝdจา
