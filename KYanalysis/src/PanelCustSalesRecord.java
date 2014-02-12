@@ -1,9 +1,12 @@
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -29,6 +32,9 @@ public abstract class PanelCustSalesRecord extends JPanel {
 	private JTable atable = new JTable();
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
+	private final int EXPORT = 1;
+	private final int DOMESTIC = 2;
+	private int DATASRC = EXPORT;
 	
 	public static void main(String[] args) {
 
@@ -46,7 +52,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 			frame.setSize(700, 500);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			
-			pcustsales.setCustcode("2013","2013","K Y V", "西瓜");
+			pcustsales.setCustcode(1,"2013","2013","K Y V", "西瓜", false); //EXPORT
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -54,13 +60,32 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		
 	}
 	
+	private void group(boolean group){
+		setCustcode(DATASRC, ys, ye, custcode, crop, group);
+	}
+	
 	public PanelCustSalesRecord() {
 		this.setLayout(new BorderLayout());
 		JPanel tablepane = new JPanel(new GridLayout(1,0,0,0));
 		JPanel titlepane = new JPanel(new FlowLayout());
 		JLabel title = new JLabel("客戶期間交易紀錄 ");
+
+		final JCheckBox chkGroup = new JCheckBox("品種彙總");
+		
+		chkGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (chkGroup.isSelected()){
+					group(true);
+				}
+				else{
+					group(false);
+				}
+			}
+		});				
+		
 		
 		titlepane.add(title);
+		titlepane.add(chkGroup);
 		
 		//tablepane.add(title, BorderLayout.NORTH);
 		
@@ -77,7 +102,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		{
 			public void mouseClicked(final MouseEvent e)
 			{
-				if (e.getClickCount() == 1)
+				if (e.getClickCount() == 2)
 				{
 					final JTable target = (JTable)e.getSource();
 					final int row = target.getSelectedRow();
@@ -97,13 +122,14 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		this.add(tablepane, BorderLayout.CENTER);
 	}
 	
-	public void setCustcode(String ys, String ye, String custcode, String crop){
+	public void setCustcode(final int dbsrc, final String ys, final String ye, final String custcode, final String crop, final boolean group){
 		this.ys = ys;
 		this.ye = ye;
 		this.custcode = custcode;
 		this.crop = crop;
+		this.DATASRC = dbsrc;
 		
-		this.model = new MyTableModel(db.getResultset_cust_sales_detail(ys,ye,custcode,crop));
+		this.model = new MyTableModel(db.getResultset_cust_sales_detail(dbsrc,ys,ye,custcode,crop, group));
 		
 		atable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		atable.setModel(model);	
@@ -112,8 +138,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		u.debug("records:" + atable.getRowCount());
 		//setColumnWidth();
 		atable.repaint();
-	
-
+		
 	}
 	/*
 	private void setColumnWidth(){

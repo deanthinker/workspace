@@ -28,6 +28,9 @@ import javax.swing.ListSelectionModel;
 
 
 public abstract class PanelSearchCust extends JPanel {
+	public final int EXPORT = 1;
+	public final int DOMESTIC = 2;
+	public int DATASRC = EXPORT;
 	private JLabel lbltitle = new JLabel();
 	private JTextField txfKeyword = new JTextField();
 	private JCheckBox chkSort = new JCheckBox("排序");
@@ -38,7 +41,8 @@ public abstract class PanelSearchCust extends JPanel {
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
 	
-	private MyTableModel model = new MyTableModel(db.getResultset_customer_all(null));
+	private MyTableModel model;
+	
 	private JTable atable = new JTable();
 	public String selectedcustcode = "";
 	public String title = "";
@@ -62,8 +66,11 @@ public abstract class PanelSearchCust extends JPanel {
 		}
 	}
 	*/
-	public PanelSearchCust() {
-
+	public PanelSearchCust(int src) {
+		DATASRC = src;
+		
+		model = new MyTableModel(db.getResultset_customer_all(DATASRC, null));
+		
 		this.setLayout(new GridLayout(2, 0, 0, 0));
 		JPanel panelFilter = new JPanel();
 		JPanel panelTable = new JPanel();
@@ -121,13 +128,13 @@ public abstract class PanelSearchCust extends JPanel {
 				
 				switch (cbxSort.getSelectedIndex()){
 					case 0: //sales
-						model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tsales"));
+						model = new MyTableModel(db.getResultset_customer_pcode(DATASRC,selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tsales"));
 						resetTableModel(model);
 						System.out.println("record count:"+model.getRowCount());
 						break;
 						
 					case 1: //weight
-						model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
+						model = new MyTableModel(db.getResultset_customer_pcode(DATASRC,selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
 						resetTableModel(model);
 						System.out.println("record count:"+model.getRowCount());
 						break;
@@ -186,9 +193,11 @@ public abstract class PanelSearchCust extends JPanel {
 	private JComponent compKeyword(){
 		JPanel panel = new JPanel();
 		JButton btnSearchKeyWord = new JButton("搜尋客戶關鍵字");
+		JButton btnReset = new JButton("重置");
 		txfKeyword.setColumns(10);
 		panel.add(txfKeyword);
 		panel.add(btnSearchKeyWord);
+		panel.add(btnReset);
 
 		
 		ActionListener actl = new ActionListener() {
@@ -198,7 +207,7 @@ public abstract class PanelSearchCust extends JPanel {
 				
 				model = null; System.gc(); //free the memory
 				//model = new MyTableModel(db.getResultset_customer_all(filter));
-				model = new MyTableModel(db.getResultset_customer_pcode(selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
+				model = new MyTableModel(db.getResultset_customer_pcode(DATASRC,selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));
 				resetTableModel(model);
 				System.out.println("record count:"+model.getRowCount());
 
@@ -207,6 +216,15 @@ public abstract class PanelSearchCust extends JPanel {
 		
 		btnSearchKeyWord.addActionListener(actl);
 		txfKeyword.addActionListener(actl);
+		btnReset.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				selectedpcode = "";
+				lbltitle.setText("");
+				updateList();
+			}			
+		});
+		
+		
 		
 		return panel;
 	}

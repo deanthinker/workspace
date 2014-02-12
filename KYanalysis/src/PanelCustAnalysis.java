@@ -21,7 +21,10 @@ import com.sun.rowset.providers.*;
 import com.sun.rowset.internal.*;
 
 public class PanelCustAnalysis extends JPanel {
-
+	public static int EXPORT = 1;
+	public static int DOMESTIC = 2;
+	public int DATASRC = EXPORT;
+	
 	KYdb db = new KYdb();
 	private JSplitPane leftsplit;
 	private JSplitPane rightsplit;
@@ -29,27 +32,10 @@ public class PanelCustAnalysis extends JPanel {
 	private JScrollPane lefttop, leftbot;
 	private JPanel righttop, rightbot;
 	
-	private PanelSearchCust panelSearchCust = new PanelSearchCust(){
-		private static final long serialVersionUID = 1L;
-		public void update() {
-			panelCustInfo.setCustcode(panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); 
-			panelCustSales.setCustcode(panelyr.getYS(), panelyr.getYE(), selectedcustcode, null);
-		}
-	};	
-
-	private PanelSearchPcode panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE, PanelSearchPcode.EXPORT){
-		private static final long serialVersionUID = 1L;
-		public void update() {
-			panelSearchCust.setPcode(selectedpcode);
-		}
-	};	
+	private PanelSearchCust panelSearchCust;	
+	private PanelSearchPcode panelSearchPcode;	
 	
-	private PanelCustInfo panelCustInfo = new PanelCustInfo(){
-		private static final long serialVersionUID = 1L;
-		public void update() {
-			
-		}
-	};	
+	private PanelCustInfo panelCustInfo;	
 	
 	private PanelCustSalesRecord panelCustSales = new PanelCustSalesRecord(){
 		private static final long serialVersionUID = 1L;
@@ -81,7 +67,31 @@ public class PanelCustAnalysis extends JPanel {
 	}
 	
 	
-	public PanelCustAnalysis() {
+	public PanelCustAnalysis(int dbsrc) { //src: EXPORT | DOMESTIC
+		DATASRC = dbsrc;
+		panelSearchCust = new PanelSearchCust(DATASRC){ 
+			private static final long serialVersionUID = 1L;
+			public void update() {
+				panelCustInfo.setCustcode(DATASRC,panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); 
+				panelCustSales.setCustcode(DATASRC,panelyr.getYS(), panelyr.getYE(), selectedcustcode, null, false);
+			}
+		};	
+		
+		panelSearchPcode = new PanelSearchPcode(PanelSearchPcode.NOIMAGE, DATASRC){
+			private static final long serialVersionUID = 1L;
+			public void update() {
+				panelSearchCust.setPcode(selectedpcode);
+			}
+		};	
+		
+		panelCustInfo = new PanelCustInfo(DATASRC){
+			private static final long serialVersionUID = 1L;
+			public void update() {
+				
+			}
+		};	
+		
+		
 		this.setLayout(new GridLayout(1, 1, 0, 0));
 		//split frame into left and right panel, each panel is then split into top and bottom
 		lefttop = new JScrollPane(createLeftTopPanel());

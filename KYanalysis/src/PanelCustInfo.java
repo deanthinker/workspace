@@ -38,6 +38,9 @@ import com.ibm.icu.math.BigDecimal;
 
 
 public abstract class PanelCustInfo extends JPanel {
+	static final int EXPORT = 1;
+	static final int DOMESTIC = 2;
+	int DATASRC = EXPORT;
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
 	public String custcode;
@@ -61,7 +64,7 @@ public abstract class PanelCustInfo extends JPanel {
 
 		try {
 			JFrame frame = new JFrame();
-			PanelCustInfo pcust = new PanelCustInfo(){
+			PanelCustInfo pcust = new PanelCustInfo(EXPORT){
 				public void update(){
 					
 				}
@@ -73,7 +76,7 @@ public abstract class PanelCustInfo extends JPanel {
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			
 			//pcust.updateTable("2013","2013","TK",null,"all"); //test1
-			pcust.setCustcode("2013","2013","KYD",null,"all"); //test2
+			pcust.setCustcode(EXPORT,"2013","2013","KYD",null,"all"); //test2
 			pcust.refreshCustSalesChart();
 			pcust.refreshCustVarietySalesChart();
 			
@@ -84,7 +87,8 @@ public abstract class PanelCustInfo extends JPanel {
 	}
 		
 	
-	public PanelCustInfo() {
+	public PanelCustInfo(int dbsrc) {
+		DATASRC = dbsrc;
 		setLayout(new GridLayout(1,3,0,0));
 		add(compSalesCropTable());
 		add(panelcustSales);
@@ -182,7 +186,7 @@ public abstract class PanelCustInfo extends JPanel {
 		float cropsales = 0;
 		if (selectedcrop == null)  return dataset;
 		
-		ResultSet rs = db.getResultset_CustVarietySales(ys, ye, custcode, selectedcrop);
+		ResultSet rs = db.getResultset_CustVarietySales(DATASRC, ys, ye, custcode, selectedcrop);
 		
 
 		try {
@@ -272,14 +276,14 @@ public abstract class PanelCustInfo extends JPanel {
 	}
 
 
-	public void setCustcode(String ys, String ye, String custcode, String pcode, String crop){
+	public void setCustcode(int dbsrc, String ys, String ye, String custcode, String pcode, String crop){
 		this.ys = ys;
 		this.ye = ye;
 		this.custcode = custcode;
 		this.pcode = pcode;
 		this.crop = crop;
 		
-		this.model = new MyTableModel(db.getResultset_CustSales(ys,ye,custcode,null,crop));
+		this.model = new MyTableModel(db.getResultset_CustSales(dbsrc, ys,ye,custcode,null,crop));
 		
 		atable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		atable.setModel(model);	
@@ -287,8 +291,8 @@ public abstract class PanelCustInfo extends JPanel {
 		atable.setRowSorter(sorter);
 		setColumnWidth();
 		
-		this.totalSales = db.getYearRangeSales(ys,ye);
-		this.custSales = db.getYearRangeSalesByCust(ys,ye,custcode);
+		this.totalSales = db.getYearRangeSales(dbsrc, ys,ye);
+		this.custSales = db.getYearRangeSalesByCust(dbsrc, ys,ye,custcode);
 		setTitle();
 		paneltotalSales.removeAll(); //clean out the chart
 		paneltotalSales.repaint();
