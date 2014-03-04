@@ -35,6 +35,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 	private final int EXPORT = 1;
 	private final int DOMESTIC = 2;
 	private int DATASRC = EXPORT;
+	final JCheckBox chkGroup;
 	
 	public static void main(String[] args) {
 
@@ -70,7 +71,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		JPanel titlepane = new JPanel(new FlowLayout());
 		JLabel title = new JLabel("客戶期間交易紀錄 ");
 
-		final JCheckBox chkGroup = new JCheckBox("品種彙總");
+		chkGroup = new JCheckBox("品種彙總");
 		
 		chkGroup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -121,7 +122,9 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		this.add(titlepane, BorderLayout.NORTH);
 		this.add(tablepane, BorderLayout.CENTER);
 	}
-	
+	public void setGroupDisabled(){
+		chkGroup.setSelected(false);
+	}
 	public void setCustcode(final int dbsrc, final String ys, final String ye, final String custcode, final String crop, final boolean group){
 		this.ys = ys;
 		this.ye = ye;
@@ -138,7 +141,6 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		u.debug("records:" + atable.getRowCount());
 		//setColumnWidth();
 		atable.repaint();
-		
 	}
 	/*
 	private void setColumnWidth(){

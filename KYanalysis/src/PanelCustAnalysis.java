@@ -73,6 +73,7 @@ public class PanelCustAnalysis extends JPanel {
 			private static final long serialVersionUID = 1L;
 			public void update() {
 				panelCustInfo.setCustcode(DATASRC,panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); 
+				panelCustSales.setGroupDisabled();
 				panelCustSales.setCustcode(DATASRC,panelyr.getYS(), panelyr.getYE(), selectedcustcode, null, false);
 			}
 		};	

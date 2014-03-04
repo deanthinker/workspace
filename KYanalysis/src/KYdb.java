@@ -34,7 +34,8 @@ public class KYdb {
 	static private Connection con;
 	
 	KYdb(){
-		con = getMysqlCon();
+		if (con == null) //shared among all instances; only 1 connection only need to initialize once  
+			con = getMysqlCon();
 	}
 	
 	KYdb (Connection c){
@@ -994,26 +995,30 @@ public class KYdb {
 						sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
 							+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
 							+ " from sao430 where custcode = '"+ custcode + "' and "
-							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
+							+ " order by sales desc";
 					else
 						sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
 								+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
 								+ " from sao430 where custcode = '"+ custcode + "' and "
 								+ " level2 = '" + crop + "' and "
-								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
+								+ " order by sales desc";
 					break;
 				case DOMESTIC:
 					if (crop == null)
 						sql ="Select pcode, level2, pcname, pename, invoice_date, packtype, packprice, actlqty, total_weight, "
 							+ " format((packprice * actlqty)/total_weight, 0) as Kgprice, format(packprice * actlqty,0) as sales " 
 							+ " from dom430 where custcode = '"+ custcode + "' and "
-							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
+							+ " order by sales desc";
 					else
 						sql ="Select pcode, level2, pcname, pename, invoice_date, packtype, packprice, actlqty, total_weight, "
 								+ " format((packprice * actlqty)/total_weight,0) as Kgprice, format(packprice * actlqty,0) as sales " 
 								+ " from dom430 where custcode = '"+ custcode + "' and "
 								+ " level2 = '" + crop + "' and "
-								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
+								+ " order by sales desc";
 					break;
 				}
 		}
