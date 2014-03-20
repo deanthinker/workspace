@@ -3,7 +3,7 @@ import java.util.Vector;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import com.ibm.icu.util.Calendar;
+import java.util.Calendar;
 import java.text.NumberFormat;
 
 public class KYutil {

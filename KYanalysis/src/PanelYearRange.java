@@ -6,7 +6,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.ibm.icu.util.Calendar;
+import java.util.Calendar;
 
 
 public class PanelYearRange extends JPanel {

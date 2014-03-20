@@ -93,19 +93,17 @@ import javax.swing.ButtonGroup;
 
 public class Start {
 
-	private JFrame mainFrame;
+	private JFrame mainFrame = new JFrame();
 	private JList<String> listVegeProd = new JList<String>();
 	private JList<String> listProductionVariety = new JList<String>();
 	private JList<String> listProductionVarietyDetail = new JList<String>();
-	private JSlider slProductionHide;
+	private JSlider slProductionHide = new JSlider();
 	
 	private DefaultListModel<String> listVegeProd_model = new DefaultListModel<String>();
 	private DefaultListModel<String> listProductionVariety_model = new DefaultListModel<String>();
 	private DefaultListModel<String> listProductionVarietyDetail_model = new DefaultListModel<String>();
 	
 	private JLabel lblTotalPcode;
-	private String selectedpcode = "0000";
-	private String selectedpcodeTitle = "";
 	private int selectedlevel2Index = -1;
 
 	private Connection con = null; // Database objects
@@ -138,7 +136,6 @@ public class Start {
 	private int HIDE_WEIGHT = 0;
 	final int VALUE_TABLE_SHOWALL_PCODE = 1;
 	final int VALUE_TABLE_PRODUCTION_PCODE = 2;
-	private boolean SHOW_TWPRICE = false;
 	final int MODE_WEIGHT_GP = 1;
 	final int MODE_WEIGHT_PRICE = 2;
 
@@ -209,7 +206,7 @@ public class Start {
 		
 		JButton btn_allpcode = new JButton("所有品種清單");
 		JLabel lbl_productionpcode = new JLabel("年度生產品種清單");
-		JButton btn_productionpcode_class = new JButton("作物別");
+		new JButton("作物別");
 		
 		final JLabel lblvalue = new JLabel("關鍵字");
 		JButton btn_singlepcode = new JButton("篩選");
@@ -607,7 +604,7 @@ public class Start {
 		gbl_thispanel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		gbl_thispanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
 		thispanel.setLayout(gbl_thispanel);
-		slProductionHide = new JSlider();
+		
 		
 		slProductionHide.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -796,8 +793,8 @@ public class Start {
 		
 		this.con = db.getConnection();
 		
-		mainFrame = new JFrame();
-		mainFrame.setTitle("\u8FB2\u53CB\u7A2E\u82D7\u516C\u53F8  \u7522\u54C1\u5206\u6790\u7CFB\u7D71");
+		
+		mainFrame.setTitle("Known-You Product Analysis");
 		mainFrame.setBounds(10, 10, 1348, 640);
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
@@ -917,11 +914,7 @@ public class Start {
 
 		Statement stat = null;
 		ResultSet rs = null;
-		String crop = "";
-		float landsize = 0;
-		float totalsize = 0;
 		String sql = "";
-		String ys = "", ye = "";
 		String year = (String)cbx_productionpcode_year.getSelectedItem();
 		String croptype = (String)cbx_productionpcode_class.getSelectedItem();
 		
@@ -1284,15 +1277,11 @@ public class Start {
 		TextColumnBuilder<BigDecimal>  colprofit  = col.column("毛利X營收(NT萬)", "profit", type.bigDecimalType()).setWidth(12);
 
 		
-		TextColumnBuilder<BigDecimal> colsort;
-		if (radStatValueProfit.isSelected())
-			colsort = colprofit;
-		else if (radStatValueGP.isSelected())
-			colsort = colgp;
-		else if (radStatValuePrice.isSelected())
-			colsort = colavgntprice;
-		else
-			colsort = colprofit;
+		if (radStatValueProfit.isSelected()) {
+		} else if (radStatValueGP.isSelected()) {
+		} else if (radStatValuePrice.isSelected()) {
+		} else {
+		}
 		
 		
 		String title = "生產計劃 品種  價值評估";
@@ -1430,7 +1419,7 @@ public class Start {
 	private void buildStatVarietyQL_LQ() {
 		StyleBuilder boldStyle         = stl.style().bold();
 		StyleBuilder boldCenteredStyle = stl.style(boldStyle).setHorizontalAlignment(HorizontalAlignment.CENTER);
-		StyleBuilder boldRightStyle = stl.style(boldStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT);
+		stl.style(boldStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT);
 		StyleBuilder titleStyle = stl.style(boldCenteredStyle)
 								.setVerticalAlignment(VerticalAlignment.MIDDLE)
 								.setFontSize(15);
@@ -1514,10 +1503,6 @@ public class Start {
 		String whereyear = null;
 		String wherelevel2 = "";
 		String whereclause = "";
-		int vys = YS;
-		int vye = YE;
-		
-		
 		if (cbx_stat_valueyear.getSelectedIndex() > 0)
 			whereyear = " year >= " + String.valueOf(YE-cbx_stat_valueyear.getSelectedIndex()) + " and year <= " + String.valueOf(YE) + " ";
 		else

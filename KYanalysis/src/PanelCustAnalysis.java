@@ -1,24 +1,8 @@
-import java.awt.BorderLayout;
 import java.awt.GridLayout;
 
-import javax.sql.*;
-import javax.sql.rowset.FilteredRowSet;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-
-import org.jfree.chart.ChartMouseEvent;
-import org.jfree.chart.ChartMouseListener;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.entity.ChartEntity;
-import org.jfree.chart.entity.XYItemEntity;
-import org.jfree.data.xy.XYDataset;
-
-import com.sun.rowset.providers.*;
-import com.sun.rowset.internal.*;
 
 public class PanelCustAnalysis extends JPanel {
 	public static int EXPORT = 1;
