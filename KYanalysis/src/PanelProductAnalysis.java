@@ -355,11 +355,19 @@ public class PanelProductAnalysis extends JPanel {
 		Vector<KeyValue_int_float> vecINTGP = db.getKeyValue_int_float_INTGP(panelSearchPcode.selectedpcode);//將db資料存入vector
 		//**********When it's produced in TW, we need to calculate GP with domestic purchase price*********
 		//tbd //combine EXP and DOM cost/price to calculate integrated gp 
-		for (KeyValue_int_float kv : vecEXPGP){dataEXPGP.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
-		for (KeyValue_int_float kv : vecINTGP){dataINTGP.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data			
-		
-		
-		
+		for (KeyValue_int_float kv : vecEXPGP){
+			if ( kv.value < -100  ) //this prevents other data from being squeezed too much
+				dataEXPGP.add((int)kv.key, -100);
+			else
+				dataEXPGP.add((int)kv.key, Math.round(kv.value));	
+			} 
+		for (KeyValue_int_float kv : vecINTGP){
+			if ( kv.value < -100  ) //this prevents other data from being squeezed too much
+				dataEXPGP.add((int)kv.key, -100);
+			else
+				dataINTGP.add((int)kv.key, Math.round(kv.value));	
+			} 			
+				
 		final XYSeriesCollection xyseriescollection2 = new XYSeriesCollection();
 		xyseriescollection2.addSeries(dataEXPGP);
 		xyseriescollection2.addSeries(dataINTGP);
@@ -390,7 +398,7 @@ public class PanelProductAnalysis extends JPanel {
         
         XYLineAndShapeRenderer ren2 = new XYLineAndShapeRenderer();
 		ren2.setBaseItemLabelFont(new Font("Ariel", Font.PLAIN, 13));  
-        NumberAxis numberaxis2 = new NumberAxis("毛利%");
+        NumberAxis numberaxis2 = new NumberAxis("GP%");
         numberaxis2.setAutoRangeIncludesZero(false);
         XYPlot xyplot2 = new XYPlot(xydataset2, null, numberaxis2, ren2);
         xyplot2.setRangeAxisLocation(AxisLocation.TOP_OR_LEFT);
