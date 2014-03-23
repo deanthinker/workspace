@@ -133,7 +133,6 @@ public class Start {
 	public int YEAR_RANGE = 10;
 	public int YE = Calendar.getInstance().get(Calendar.YEAR); // end year
 	public int YS = YE - YEAR_RANGE; // start year
-	private int HIDE_WEIGHT = 0;
 	final int VALUE_TABLE_SHOWALL_PCODE = 1;
 	final int VALUE_TABLE_PRODUCTION_PCODE = 2;
 	final int MODE_WEIGHT_GP = 1;
@@ -280,7 +279,7 @@ public class Start {
 		cbx_hideweight.setSelectedIndex(0);
 		cbx_hideweight.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				HIDE_WEIGHT = cbx_hideweight.getSelectedIndex();
+				cbx_hideweight.getSelectedIndex();
 			}
 		});	
 		
@@ -375,9 +374,6 @@ public class Start {
 		settingpanelother.setBorder(new TitledBorder(null, "品種價值表",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));			
 		
-		
-		
-		
 		cbx_stat_rankclass = new JComboBox(db.getVegeCropVec());
 		cbx_stat_prodclass = new JComboBox(db.getVegeCropVec());
 		
@@ -412,15 +408,12 @@ public class Start {
 		settingpanelrank.setLayout(new GridLayout(3, 1, 0, 0));
 		//settingpanelother.setLayout(new GridLayout(2, 1, 0, 0));
 		
-		
 		settingpanelrank.add(panel_yrange);
 		settingpanelrank.add(panel_class);
 		settingpanelrank.add(panel_sales);
 		
-		
 		settingpanel.add(settingpanelrank);
 		settingpanel.add(settingpanelother);
-		
 		
 		radStatSalesNT = new JRadioButton("銷售額NT");
 		radStatSalesKg = new JRadioButton("銷售量Kg");
@@ -513,7 +506,6 @@ public class Start {
 		panel_other_value1.add(lblStatVarietyQL_LQ);
 		panel_other_value1.add(cbx_stat_prodclass);	
 		panel_other_value1.add(cbx_stat_valueyear);
-
 		
 		panel_valueopt.add(lblStatValueOrder);
 		panel_valueopt.add(radStatValueProfit);
@@ -565,6 +557,23 @@ public class Start {
 				});
 			}
 		});
+		
+		JButton btnGPlanduse = new JButton("生產價值分析(占地)");
+		btnGPlanduse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
+							win.setVisible(true);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		});
+		panel_other_value2.add(btnGPlanduse);
 		panel_other_value2.add(btnForeignDomesticPriceCompareReport);
 		
 		
@@ -797,7 +806,6 @@ public class Start {
 		mainFrame.setTitle("Known-You Product Analysis");
 		mainFrame.setBounds(10, 10, 1348, 640);
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
 		lblTotalPcode = new JLabel("Total PCODE:");
 		mainFrame.getContentPane().add(lblTotalPcode);
 
