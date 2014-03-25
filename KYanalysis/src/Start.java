@@ -415,6 +415,7 @@ public class Start {
 		settingpanel.add(settingpanelrank);
 		settingpanel.add(settingpanelother);
 		
+		
 		radStatSalesNT = new JRadioButton("銷售額NT");
 		radStatSalesKg = new JRadioButton("銷售量Kg");
 		radStatSalesNT.setSelected(true);
@@ -537,6 +538,41 @@ public class Start {
 				});
 			}
 		});
+		panel_other_value2.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		JButton btnGPlanduse = new JButton("生產價值毛利分析(占地)");
+		btnGPlanduse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
+							win.setVisible(true);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		});
+		panel_other_value2.add(btnGPlanduse);
+		
+		JButton btnGPSales = new JButton("銷售排名毛利分析(營收比)");
+		btnGPSales.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
+							win.setVisible(true);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		});		
+		panel_other_value2.add(btnGPSales);
 		
 		panel_other_value2.add(btnAvgGPWeightReport);
 		
@@ -557,24 +593,10 @@ public class Start {
 				});
 			}
 		});
-		
-		JButton btnGPlanduse = new JButton("生產價值分析(占地)");
-		btnGPlanduse.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
-							win.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		panel_other_value2.add(btnGPlanduse);
 		panel_other_value2.add(btnForeignDomesticPriceCompareReport);
+		
+		JLabel label = new JLabel("");
+		panel_other_value2.add(label);
 		
 		
 		return settingpanel;
@@ -701,7 +723,6 @@ public class Start {
 		JLabel lblyrange = new JLabel("Period");
 		JLabel lblyear = new JLabel("Year");
 
-
 		cbxProductionYS = new JComboBox(u.create10yearVector());
 		cbxProductionYE = new JComboBox(u.create10yearVector());
 
@@ -806,6 +827,7 @@ public class Start {
 		mainFrame.setTitle("Known-You Product Analysis");
 		mainFrame.setBounds(10, 10, 1348, 640);
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
 		lblTotalPcode = new JLabel("Total PCODE:");
 		mainFrame.getContentPane().add(lblTotalPcode);
 

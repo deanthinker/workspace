@@ -361,6 +361,15 @@ public class MainLoad extends JFrame {
 		});
 		btnTest.setBounds(270, 290, 87, 23);
 		contentPane.add(btnTest);
+		
+		JButton fix_intGP = new JButton("Fix 0% GP");
+		fix_intGP.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				fixIntegratedGP();	
+			}
+		});
+		fix_intGP.setBounds(466, 227, 99, 23);
+		contentPane.add(fix_intGP);
 	}
 	
 	class PcodeYear{ 
@@ -389,6 +398,7 @@ public class MainLoad extends JFrame {
 				stat.executeUpdate("DROP TABLE integratedGP");
 				stat.executeUpdate("CREATE TABLE integratedGP LIKE vege_cost_price_year");			
 				stat.executeUpdate("INSERT integratedGP SELECT * from vege_cost_price_year");
+			
 			}
 			else{
 				System.out.println("integratedGP Table doesn't exist!");
@@ -447,8 +457,8 @@ public class MainLoad extends JFrame {
 				expavgntprice = rs.getDouble("avgntprice");
 				expavgntcost = rs.getDouble("avgntcost");
 				rs.getDouble("gp");
-				expntsales = expsoldkg * expavgntprice;
-				expntcost = expbuykg * expavgntcost;
+				expntsales = rs.getDouble("tsales");
+				expntcost = rs.getDouble("tcost");
 				
 				domstat = con.createStatement();
 				sql = "SELECT * from vege_cost_price_yearpro960out where pcode = '" + pcode + "' and year = '" + year + "'";
@@ -459,8 +469,8 @@ public class MainLoad extends JFrame {
 					dombuykg = domrs.getDouble("buykg");
 					domavgntprice = domrs.getDouble("avgntprice");
 					domavgntcost = domrs.getDouble("avgntcost");
-					domntsales = domsoldkg * domavgntprice;
-					domntcost = dombuykg * domavgntcost;
+					domntsales = domrs.getDouble("tsales");;
+					domntcost = domrs.getDouble("tcost");
 					itgsoldkg = expsoldkg + domsoldkg;
 					itgbuykg = expbuykg + dombuykg;
 					itgntsales = expntsales + domntsales;
@@ -490,7 +500,8 @@ public class MainLoad extends JFrame {
 					rs.updateDouble("avgntprice", itgavgntprice);
 					rs.updateDouble("avgntcost", itgavgntcost);
 					rs.updateDouble("gp", itggp);
-	
+					rs.updateDouble("tsales", itgntsales);
+					rs.updateDouble("tcost", itgntcost);
 					rs.updateRow();
 				}	
 			}		
@@ -609,6 +620,10 @@ public class MainLoad extends JFrame {
 				stat.executeUpdate("DROP TABLE integratedGP");
 				stat.executeUpdate("CREATE TABLE integratedGP LIKE vege_cost_price_year");			
 				stat.executeUpdate("INSERT integratedGP SELECT * from vege_cost_price_year");
+				
+				stat.executeUpdate("ALTER TABLE `market`.`vege_cost_price_year` "
+									+" ADD COLUMN `tsales` INT(11) NULL AFTER `year`, "
+									+" ADD COLUMN `tcost` INT(11) NULL AFTER `tsales`");
 			}
 			else{
 				System.out.println("integratedGP Table doesn't exist!");
@@ -707,6 +722,8 @@ public class MainLoad extends JFrame {
 					rs.updateDouble("buykg", itgbuykg);
 					rs.updateDouble("avgntprice", itgavgntprice);
 					rs.updateDouble("avgntcost", itgavgntcost);
+					rs.updateDouble("tsales", itgntsales);
+					rs.updateDouble("tcost", itgntcost);
 					rs.updateDouble("gp", itggp);
 	
 					rs.updateRow();
@@ -855,7 +872,7 @@ public class MainLoad extends JFrame {
 		float avgntcost =0;
 		float gp = 0;
 		
-		String sqlpcodelist = "SELECT distinct pcode from pro960";
+		String sqlpcodelist = "SELECT distinct pcode from vege_cost_price_yearpro960out";
 		debug(sqlpcodelist);
 		try { //get pcode list
 			pcodelistStat = con.createStatement();
@@ -903,7 +920,71 @@ public class MainLoad extends JFrame {
 		
 		
 	}	
-	
+
+	private void fixIntegratedGP(){ //TBD
+		//vege_cost_price_year only records imports and do not take "inland outsource" into consideration
+		//for instance papaya RedLady is largely produced in TW only
+		
+		Statement pcodelistStat = null;
+		ResultSet pcodelistrs = null;
+		
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+
+		float previous_avgntcost =0;
+		float avgntcost =0;
+		float gp = 0;
+		
+		//String sqlpcodelist = "SELECT distinct pcode from integratedgp";
+		String sqlpcodelist = "SELECT distinct pcode from integratedgp";
+		debug(sqlpcodelist);
+		try { //get pcode list
+			pcodelistStat = con.createStatement();
+			pcodelistrs = pcodelistStat.executeQuery(sqlpcodelist);
+		} catch (SQLException e) {
+			debug("get pcodelist Exception :" + e.toString());
+		}	
+		
+		try { // loop pcode
+			while (pcodelistrs.next()) {
+				sql = "SELECT * from integratedgp where pcode = \'" + pcodelistrs.getString("pcode") + "\' order by year";
+				//sql = "SELECT * from vege_cost_price_yearpro960out where pcode = '0117' order by year";
+				debug(sql);
+
+				stat = con.createStatement(
+					    ResultSet.TYPE_FORWARD_ONLY,
+					    ResultSet.CONCUR_UPDATABLE,
+					    ResultSet.HOLD_CURSORS_OVER_COMMIT
+					   );
+				rs = stat.executeQuery(sql);
+				previous_avgntcost = 0; //must reset to 0 for each variety
+				while (rs.next()) {
+					avgntcost = rs.getInt("avgntcost");
+					debug(rs.getString("pcode")+" " + rs.getString("year")+ " gp:"+ rs.getFloat("gp")+"  soldkg:" + rs.getFloat("soldkg") + "  avgcost:"+ rs.getFloat("avgntcost") +"   prec:" + previous_avgntcost); 
+					if (avgntcost==0  && rs.getFloat("soldkg") > 0 && rs.getFloat("avgntprice") > 0 && previous_avgntcost > 0 ){ //if there's sales
+						//avgntprice MUST be >0 to avoid infinity error
+						gp = ( ((rs.getFloat("avgntprice") - previous_avgntcost)/rs.getFloat("avgntprice")) * 100 );
+						rs.updateFloat("gp", gp);
+						rs.updateRow();
+					}
+					else{
+						previous_avgntcost = rs.getInt("avgntcost");
+					}
+				}
+			}
+			pcodelistStat.close();
+			pcodelistrs.close();
+			rs.close();
+			stat.close();
+			
+		} catch (SQLException e) {
+			debug("loop pcodelist Exception :" + e.toString());
+		}				
+		
+		
+		
+	}	
 	
 	public void debug(String text){
 		System.out.println(text);
@@ -1204,6 +1285,8 @@ public class MainLoad extends JFrame {
 		float buykg = 0;
 		float avgntprice = 0;
 		float avgntcost = 0;
+		float tsales = 0;
+		float tcost = 0;
 		long id = -1;
 		
 
@@ -1227,6 +1310,8 @@ public class MainLoad extends JFrame {
 		  "avgntprice decimal(11,2) DEFAULT NULL," +
 		  "avgntcost decimal(11,2) DEFAULT NULL," +
 		  "gp decimal(11,2) DEFAULT NULL," +
+		  "tsales decimal(15,2) DEFAULT 0," +
+		  "tcost decimal(15,2) DEFAULT 0," +
 		  "year int(11) DEFAULT NULL," +
 		  "PRIMARY KEY (`id`)" +
 		  ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
@@ -1257,13 +1342,16 @@ public class MainLoad extends JFrame {
 				  pcode = rs.getString("pcode");
 				  year = rs.getString("iyear");
 				  soldkg = rs.getFloat("soldkg");
+				  tsales = rs.getFloat("tsales");
 				  rs.getFloat("tsales");
 				  avgntprice = rs.getFloat("avgntprice");
 				  sql = "INSERT into vege_cost_price_yearPRO960out VALUES(NULL,'"+pcode +"',"
 						  + soldkg+ "," 
 						  + "0," 
-						  + Float.toString(avgntprice) + "," 
+						  + Float.toString(avgntprice) + ","
+						  + "0,"
 						  + "0," 
+						  + Float.toString(tsales) + "," 
 						  + "0," 
 						  + year + ")";				  
 				  //debug(sql);
@@ -1287,7 +1375,7 @@ public class MainLoad extends JFrame {
 				  pcode = rs.getString("pcode");
 				  year = rs.getString("year"); 
 				  buykg = rs.getFloat("buykg");
-				  rs.getFloat("tcost");
+				  tcost = rs.getFloat("tcost");
 				  avgntcost = rs.getFloat("avgntcost");
 				  id = pcodeyear_exist_in_vege_cost_price_year("vege_cost_price_yearPRO960out",pcode,year);
 				  debug("id:"+id + "\tpcode:"+pcode+"\tyear:"+year);
@@ -1295,6 +1383,7 @@ public class MainLoad extends JFrame {
 					  sql = "UPDATE vege_cost_price_yearPRO960out SET "
 					  		+ " `buykg`="+buykg + ", "
 					  		+ " `avgntcost`="+avgntcost + ", "
+					  		+ " `tcost`="+tcost + ", "
 					  		+ " `gp`= ((avgntprice-"+avgntcost + ")/avgntprice ) * 100"
 					  		+" WHERE `id`='"+ id  +"'";
 					  debug("update id:"+id+"   sql:"+sql);
@@ -1308,6 +1397,8 @@ public class MainLoad extends JFrame {
 							  + "0," 
 							  + Float.toString(avgntcost) + ","
 							  + "0," 
+							  + "0," 
+							  + Float.toString(tcost) + ","
 							  + year + ")";				  
 					  debug(sql);
 					  statinsert = con.createStatement();
@@ -1331,8 +1422,10 @@ public class MainLoad extends JFrame {
 		long count =0;
 		float avgntcost = 0;
 		float avgntprice = 0;
-		String soldkg = "";
-		String buykg = "";
+		float soldkg = 0;
+		float buykg = 0;
+		float tsales = 0;
+		float tcost = 0;
 		float gp = 0;
 		float totalRecord = 0;
 		float currRecord =0;
@@ -1353,13 +1446,15 @@ public class MainLoad extends JFrame {
 		
 	      sql = "CREATE TABLE vege_cost_price_year (" +
 	      "id INT NOT NULL AUTO_INCREMENT,"+
-	      "pcode varchar(20) DEFAULT NULL," +
-		  "soldkg decimal(15,2) DEFAULT NULL," +
-		  "buykg decimal(15,2) DEFAULT NULL," +
-		  "avgntprice decimal(15,2) DEFAULT NULL," +
-		  "avgntcost decimal(15,2) DEFAULT NULL," +
-		  "gp decimal(25,6) DEFAULT NULL," +
-		  "year int(11) DEFAULT NULL," +
+	      "pcode varchar(20) DEFAULT 0," +
+		  "soldkg decimal(15,2) DEFAULT 0," +
+		  "buykg decimal(15,2) DEFAULT 0," +
+		  "avgntprice decimal(15,2) DEFAULT 0," +
+		  "avgntcost decimal(15,2) DEFAULT 0," +
+		  "gp decimal(15,2) DEFAULT 0," +
+		  "tsales decimal(15,2) DEFAULT 0," +
+		  "tcost decimal(15,2) DEFAULT 0," +
+		  "year int(11) DEFAULT 0," +
 		  "PRIMARY KEY (`id`)" +
 		  ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 	      
@@ -1385,7 +1480,7 @@ public class MainLoad extends JFrame {
 				  pcode = rsprice.getString("pcode");
 				  year = rsprice.getString("year");
 				  avgntprice = rsprice.getFloat("avgntprice");
-				  soldkg = rsprice.getString("sumqty");
+				  soldkg = rsprice.getFloat("sumqty");
 				  
 				  sql = "SELECT count(*) FROM variety_cost_year where pcode = '" + pcode +"' and year = '" + year +"'";  
 				  count = countRow(sql);
@@ -1396,7 +1491,7 @@ public class MainLoad extends JFrame {
 				  }
 				  else if (count == 0){
 					  avgntcost = 0;
-					  buykg = "0";
+					  buykg = 0;
 					  gp = 0;
 				  }
 				  else if (count == 1){
@@ -1407,7 +1502,7 @@ public class MainLoad extends JFrame {
 					  //debug(sql);
 					  while(rscost.next()){
 						  avgntcost = rscost.getFloat("avgntcost");
-						  buykg = rscost.getString("sumqty");
+						  buykg = rscost.getFloat("sumqty");
 						  if (avgntcost > 0 && avgntprice > 0)
 							  gp = (avgntprice - avgntcost) / avgntprice * 100;
 						  else
@@ -1416,13 +1511,17 @@ public class MainLoad extends JFrame {
 					  statcost.close();
 					  rscost.close();
 				  }
+				  tsales = soldkg * avgntprice;
+				  tcost = buykg * avgntcost;
 				  sql = "INSERT into vege_cost_price_year VALUES(NULL,'"+pcode +"',"
 				  											  	  + soldkg+ "," 
 				  											  	  + buykg + "," 
 				  											  	  + Float.toString(avgntprice) + "," 
 				  											  	  + Float.toString(avgntcost) + "," 
 				  											  	  + Float.toString(gp) + "," 
-				  											  	  + year + ")";
+				  												  + Float.toString(tsales) + ","
+				  												  + Float.toString(tcost) + ","
+				  												  + year + ")";
 				  //debug(sql);
 				  stat = con.createStatement();
 				  stat.executeUpdate(sql);
