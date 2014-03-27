@@ -74,16 +74,16 @@ public class PanelInventory extends JPanel {
 		XYSeries databuyForeign = new XYSeries("國外採購");
 		XYSeries dataforecast = new XYSeries("預購");
 
-		Vector<KeyValue_int_float> salesvec = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> salesvec = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : salesvec){datasales.add(kv.key, Math.round(kv.value));	} //資料轉入圖表data
 
 		Vector<KeyValue_int_float> productionvec = db.getKeyValue_int_float_PRODUCTION(panelSearchPcode.selectedpcode);
 		for (KeyValue_int_float kv : productionvec){dataproduction.add(kv.key,  Math.round(kv.value));	}
 		
-		Vector<KeyValue_int_float> buyTWvec = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"sumqty");
+		Vector<KeyValue_int_float> buyTWvec = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"buykg");
 		for (KeyValue_int_float kv : buyTWvec){databuyTW.add(kv.key,  Math.round(kv.value));	}
 		
-		Vector<KeyValue_int_float> buyForeignvec = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"sumqty");
+		Vector<KeyValue_int_float> buyForeignvec = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"buykg");
 		for (KeyValue_int_float kv : buyForeignvec){databuyForeign.add(kv.key,  Math.round(kv.value));	}
 		
 		Vector<KeyValue_int_float> forecastvec = db.getKeyValue_int_float_EXPFORECAST(panelSearchPcode.selectedpcode);

@@ -146,7 +146,7 @@ public class KYdb {
 		Statement stat = null;
 		ResultSet rs = null;
 		float avgntprice =0;
-		String sql = "SELECT * FROM market.variety_price_year where "
+		String sql = "SELECT * FROM market.vege_cost_price_year where "
 				+ "pcode = '" + pcode + "' "
 				+ " order by year desc";
 
@@ -225,7 +225,7 @@ public class KYdb {
 		Statement stat = null;
 		ResultSet rs = null;
 		float soldkg =0;
-		String sql = "SELECT sum(sumntprice) as totalincome FROM variety_price_year where "
+		String sql = "SELECT sum(sumntprice) as totalincome FROM vege_cost_price_year where "
 				+ " pcode = '" + pcode + "' and"
 				+ " year >= " + ys + " and "
 				+ " year <= " + ye
@@ -254,7 +254,7 @@ public class KYdb {
 		ResultSet rs = null;
 		float soldkg =0;
 		
-		String sql = "SELECT pcode, year, sum(intostock_qty) as sumqty from ( " 
+		String sql = "SELECT pcode, year, sum(intostock_qty) as buykg from ( " 
 				   + "SELECT pcode, level2, intostock_qty, year(supply_date) as year "
 				   + " FROM market.pro960 where pcode = '" + pcode + "') as t1 where "
 				   + " year >= '" + ys + "' and year <='" + ye + "'" 
@@ -264,7 +264,7 @@ public class KYdb {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
 			if (rs.next()) { 
-				soldkg = rs.getFloat("sumqty"); //return 1st record
+				soldkg = rs.getFloat("buykg"); //return 1st record
 			}else{
 				soldkg = 0;
 			}
@@ -1571,14 +1571,14 @@ public class KYdb {
 	
 	
 	public Vector<KeyValue_int_float> getKeyValue_int_float_EXPSOLD(String pcode, String field){
-		//Support 3 queries: sumqty, sumntprice, avgntprice
+		//Support 3 queries: soldkg, sumntprice, avgntprice
 		Statement stat = null;
 		ResultSet rs = null;
 		int year = 0;
 		float fieldValue = 0;
 		Vector<KeyValue_int_float> data = new Vector<KeyValue_int_float>();
 		
-		String sql = "SELECT * from variety_price_year"
+		String sql = "SELECT * from vege_cost_price_year"
 				+ " where pcode = '" +pcode +"' ";
 		
 		u.debug(sql);
@@ -1602,15 +1602,15 @@ public class KYdb {
 	}
 
 	public Vector<KeyValue_int_float> getKeyValue_int_float_DOMSOLD(String pcode, String field){
-		//support 3 queries: avgntprice, sumqty, sumntsales
+		//support 3 queries: avgntprice, soldkg, sumntsales
 		Statement stat = null;
 		ResultSet rs = null;
 		int year = 0;
 		float fieldValue = 0;
 		Vector<KeyValue_int_float> data = new Vector<KeyValue_int_float>();
 		
-		String sql = "Select pcode, pcname, level2, iyear, sumntsales/sumqty as avgntprice, sumqty, sumntsales "
-		+ " from ( Select *, year(invoice_date) as iyear, sum(total_weight) as sumqty, sum(sales) as sumntsales"
+		String sql = "Select pcode, pcname, level2, iyear, sumntsales/soldkg as avgntprice, soldkg, sumntsales "
+		+ " from ( Select *, year(invoice_date) as iyear, sum(total_weight) as soldkg, sum(sales) as sumntsales"
 		+ " from (SELECT *, (packprice * actlqty) as sales" 
 		+ " from dom430 where pcode = '" + pcode +"'"
 		+ " ) as t1 group by pcode, iyear) as t2";		
@@ -2054,14 +2054,14 @@ public class KYdb {
 	}		
 	
 	public Vector<KeyValue_int_float> getKeyValue_int_float_BUYFOREIGN(String pcode, String field){
-		//Support 3 queries: sumqty, sumntcost, avgntcost
+		//Support 3 queries: soldkg, sumntcost, avgntcost
 		Statement stat = null;
 		ResultSet rs = null;
 		int year = 0;
 		float fieldValue = 0;
 		Vector<KeyValue_int_float> data = new Vector<KeyValue_int_float>();
 		
-		String sql = "SELECT * from variety_cost_year"
+		String sql = "SELECT * from vege_cost_price_year"
 				+ " where pcode = '" +pcode +"' ";
 		
 		u.debug(sql);
@@ -2085,7 +2085,7 @@ public class KYdb {
 	}
 	
 	public Vector<KeyValue_int_float> getKeyValue_int_float_BUYTW(String pcode, String field){
-		//Support 3 queries: sumqty, sumntcost, avgntcost
+		//Support 3 queries: buykg, sumntcost, avgntcost
 		Statement stat = null;
 		ResultSet rs = null;
 		int year = 0;
@@ -2094,8 +2094,8 @@ public class KYdb {
 		Vector<KeyValue_int_float> data = new Vector<KeyValue_int_float>();
 
 		
-		String sql = "SELECT *, sumntcost/sumqty as avgntcost from ("
-				   + "SELECT pcode, year, sum(total_pay) as sumntcost, sum(intostock_qty) as sumqty from ( " 
+		String sql = "SELECT *, sumntcost/buykg as avgntcost from ("
+				   + "SELECT pcode, year, sum(total_pay) as sumntcost, sum(intostock_qty) as buykg from ( " 
 				   + "SELECT pcode, level2, total_pay, intostock_qty, year(supply_date) as year "
 				   + " FROM market.pro960 where pcode = '" + pcode + "') as t1  " 
 				   + " group by year ) as t2";
@@ -2292,12 +2292,12 @@ public class KYdb {
 		
 		return rs;
 	}	
-	
+	/*
 	public float getPcodeLatest_avgntcost(String pcode){
 		Statement stat = null;
 		ResultSet rs = null;
 		float avgntcost = 0;
-		String sql = "SELECT * FROM market.variety_cost_year where "
+		String sql = "SELECT * FROM market.vege_cost_price_year where "
 				+ "pcode = '" + pcode + "' "
 				+ " order by year desc";
 		
@@ -2321,7 +2321,7 @@ public class KYdb {
 		return avgntcost;
 			
 	}	
-
+	 */
 	public long countRow(String sql) { // the SQL must be something like SELECT
 		// count(pcode) from xxxx where xxx =
 		// xxx

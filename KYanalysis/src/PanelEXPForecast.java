@@ -193,22 +193,22 @@ public class PanelEXPForecast extends JPanel {
 		XYSeries dataDOMFORECAST = new XYSeries("國內預購");
 		XYSeries dataINVENTORY = new XYSeries("期末庫存");
 
-		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecEXPSOLDKG){dataEXPSOLDKG.add(kv.key, Math.round(kv.value));	} //資料轉入圖表data
 		
 		Vector<KeyValue_int_float> vecPRODUCTION = db.getKeyValue_int_float_PRODUCTION(panelSearchPcode.selectedpcode);
 		for (KeyValue_int_float kv : vecPRODUCTION){dataPRODUCTION.add(kv.key,  Math.round(kv.value));	}
 		
-		Vector<KeyValue_int_float> vecBUYTW = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"sumqty");
+		Vector<KeyValue_int_float> vecBUYTW = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"buykg");
 		for (KeyValue_int_float kv : vecBUYTW){dataBUYTW.add(kv.key,  Math.round(kv.value));	}
 		
-		Vector<KeyValue_int_float> vecBUYFOREIGN = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"sumqty");
+		Vector<KeyValue_int_float> vecBUYFOREIGN = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"buykg");
 		for (KeyValue_int_float kv : vecBUYFOREIGN){dataBUYFOREIGN.add(kv.key,  Math.round(kv.value));	}
 		
 		Vector<KeyValue_int_float> vecEXPFORECAST = db.getKeyValue_int_float_EXPFORECAST(panelSearchPcode.selectedpcode);
 		for (KeyValue_int_float kv : vecEXPFORECAST){dataEXPFORECAST.add(kv.key,  Math.round(kv.value));	}
 		
-		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecDOMSOLDKG){dataDOMSOLDKG.add(kv.key, Math.round(kv.value));	} //資料轉入圖表data
 
 		Vector<KeyValue_int_float> vecDOMFORECAST = db.getKeyValue_int_float_DOMFORECAST(panelSearchPcode.selectedpcode);

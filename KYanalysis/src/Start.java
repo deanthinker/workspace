@@ -563,7 +563,7 @@ public class Start {
 				EventQueue.invokeLater(new Runnable() {
 					public void run() {
 						try {
-							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
+							ReportGPorderBySales win = new ReportGPorderBySales();
 							win.setVisible(true);
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1433,11 +1433,10 @@ public class Start {
 					//u.debug(rsvars.getString("level2")+", "+rsvars.getString("pcode"));
 				}
 			}
-			
-			statvars.close();
-			rsvars.close();
-			statlevel2.close();
-			rslevel2.close();
+			if (statvars != null) statvars.close();
+			if (rsvars != null) rsvars.close();
+			if (statlevel2 != null) statlevel2.close();
+			if (rslevel2 != null) rslevel2.close();
 		} 
 		catch (SQLException x) {
 			System.out.println("getJRDS_ProductionVarietyQL_LQ Exception :" + x.toString());

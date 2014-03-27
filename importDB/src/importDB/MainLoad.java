@@ -201,7 +201,6 @@ public class MainLoad extends JFrame {
 		tf_user.setBounds(109, 582, 145, 21);
 		contentPane.add(tf_user);
 		tf_user.setColumns(10);
-		
 		JLabel lblExcelFileName = new JLabel("Excel File Name");
 		
 		lblExcelFileName.setBounds(10, 490, 89, 15);
@@ -576,8 +575,10 @@ public class MainLoad extends JFrame {
 					float avgntprice = domrs.getFloat("avgntprice");
 					float avgntcost = domrs.getFloat("avgntcost");
 					float gp = domrs.getFloat("gp");
+					float tsales = domrs.getFloat("tsales");
+					float tcost = domrs.getFloat("tcost");					
 					
-					insert = "INSERT INTO integratedGP (`pcode`, `soldkg`, `buykg`, `avgntprice`, `avgntcost`, `gp`, `year`) "
+					insert = "INSERT INTO integratedGP (`pcode`, `soldkg`, `buykg`, `avgntprice`, `avgntcost`, `gp`, `tsales`, `tcost`, `year`) "
 							+ " VALUES ('" 
 							+ py.pcode + "', " 
 							+ soldkg  + ", "
@@ -585,6 +586,8 @@ public class MainLoad extends JFrame {
 							+ avgntprice + ", "
 							+ avgntcost+ ", "
 							+ gp+ ", "
+							+ tsales+ ", "
+							+ tcost+ ", "							
 							+ py.year + ") ";
 		
 					System.out.println(insert);
@@ -992,8 +995,10 @@ public class MainLoad extends JFrame {
 
 	
 	private void createALL(){
+		/*
 		createVarietyCostYear();
 		createVarietyPriceYear();
+		*/
 		createTable_vege_cost_price_year();
 		createPRO960toInsourceOutsource();
 		createPRO960toInsourceCostYear("in");
@@ -1002,6 +1007,8 @@ public class MainLoad extends JFrame {
 		fixGP(); //use previous cost if cost does not exit
 		fixGPwithPRO960();
 		createIntegratedGP();
+		fixIntegratedGP();
+		System.out.println("Complete!!");
 	}
 	
 	private void createPRO960toInsourceCostYear(String tbsource){
@@ -1289,11 +1296,12 @@ public class MainLoad extends JFrame {
 		float tcost = 0;
 		long id = -1;
 		
-
+		/*
 	    if (isTableExisting("pro960_out_cost_year") == false || isTableExisting("variety_price_year")==false ){
 	    	debug("either pro960_out_cost_year or variety_price_year do not exist! program terminated.");
 	    	return;
 	    }
+	    */
 
 	    if (isTableExisting("vege_cost_price_yearPRO960out"))
 	    	dropTable("vege_cost_price_yearPRO960out");
@@ -1331,7 +1339,7 @@ public class MainLoad extends JFrame {
 			  sql = "Select pcode, pcname, level2, iyear, tsales/soldkg as avgntprice, soldkg, tsales " +
 						" from ( Select *, year(invoice_date) as iyear, sum(total_weight) as soldkg, sum(sales) as tsales "+ 
 						" from (SELECT *, ((packprice * actlqty)/total_weight) as up, (packprice * actlqty) as sales "+ 
-						" from dom430) as t1 group by pcode, iyear) as t2";
+						" from dom430 where year(invoice_date) < 2099) as t1 group by pcode, iyear) as t2";
 				
 			  stat = con.createStatement();
 			  rs = stat.executeQuery(sql);
@@ -1414,6 +1422,151 @@ public class MainLoad extends JFrame {
 	}	
 
 	public void createTable_vege_cost_price_year(){
+		String sql = null;
+		ResultSet rscost = null;
+		ResultSet rsprice = null;
+		String pcode = null;
+		String year = null;
+		long count =0;
+		float avgntcost = 0;
+		float avgntprice = 0;
+		float soldkg = 0;
+		float buykg = 0;
+		float tsales = 0;
+		float tcost = 0;
+		float gp = 0;
+		float totalRecord = 0;
+		float currRecord =0;
+		long id = -1;
+		Statement statinsert = null;
+		Statement stat = null;
+		/*
+	    if (isTableExisting("variety_cost_year") == false || isTableExisting("variety_price_year")==false ){
+	    	debug("either variety_cost_year or variety_price_year do not exist! program terminated.");
+	    	return;
+	    }
+		 */
+		
+	    if (isTableExisting("vege_cost_price_year"))
+	    	dropTable("vege_cost_price_year");
+	    
+		
+		//create table
+		debug("creating vege_cost_price_year...");
+		
+	      sql = "CREATE TABLE vege_cost_price_year (" +
+	      "id INT NOT NULL AUTO_INCREMENT,"+
+	      "pcode varchar(20) DEFAULT 0," +
+		  "soldkg decimal(15,2) DEFAULT 0," +
+		  "buykg decimal(15,2) DEFAULT 0," +
+		  "avgntprice decimal(15,2) DEFAULT 0," +
+		  "avgntcost decimal(15,2) DEFAULT 0," +
+		  "gp decimal(15,2) DEFAULT 0," +
+		  "tsales decimal(15,2) DEFAULT 0," +
+		  "tcost decimal(15,2) DEFAULT 0," +
+		  "year int(11) DEFAULT 0," +
+		  "PRIMARY KEY (`id`)" +
+		  ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+	      
+		  try {
+			  stat = con.createStatement();
+			  stat.executeUpdate(sql);
+			  stat.close();
+			   debug("vege_cost_price_year table created");
+		  }
+		  catch(SQLException e) { debug("CreateDB Exception :" + e.toString());  } 
+		  finally  { Close();}
+		 
+
+			
+		  try {
+			  //list out the sales record
+			  sql = "Select pcode, pcname, level2, iyear, tsales/soldkg as avgntprice, soldkg, tsales " +
+						" from ( Select *, year(invoice_date) as iyear, sum(total_weight) as soldkg, sum(sales) as tsales "+ 
+						" from (SELECT *, (unit_price * toNTrate) as up, (unit_price * total_weight * toNTrate) as sales "+ 
+						" from sao430) as t1 group by pcode, iyear) as t2";
+				
+			  stat = con.createStatement();
+			  rs = stat.executeQuery(sql);
+			  debug(sql);
+			  //insert the sales record in year base
+			  while(rs.next()){
+				  System.out.println("vege_cost_price_year:"+pcode);
+				  pcode = rs.getString("pcode");
+				  year = rs.getString("iyear");
+				  soldkg = rs.getFloat("soldkg");
+				  tsales = rs.getFloat("tsales");
+				  rs.getFloat("tsales");
+				  avgntprice = rs.getFloat("avgntprice");
+				  sql = "INSERT into vege_cost_price_year VALUES(NULL,'"+pcode +"',"
+						  + soldkg+ "," 
+						  + "0," 
+						  + Float.toString(avgntprice) + ","
+						  + "0,"
+						  + "0," 
+						  + Float.toString(tsales) + "," 
+						  + "0," 
+						  + year + ")";				  
+				  //debug(sql);
+				  statinsert = con.createStatement();
+				  statinsert.executeUpdate(sql);
+
+			  }
+		  }  catch(SQLException e) { debug("CreateDB Exception :" + e.toString());  }
+	  
+		  try{
+			 
+			  //fill out the cost fields in the record with the data extracted from pro370 (domestic purchase) 
+			  sql = "SELECT *, tcost/buykg as avgntcost from ("
+					  +"SELECT pcode, year, sum(intostock_qty) as buykg, sum(cost) as tcost from ("
+					  +"SELECT pcode, year(invoice_date) as year, intostock_qty, (intostock_qty * unit_price * rate) as cost FROM pro370 where unit_price > 0"
+				  	  +") as t1 group by pcode,year) as t2 order by pcode";	
+			  
+			  stat = con.createStatement();
+			  rs = stat.executeQuery(sql);			  
+			  while(rs.next()){
+				  pcode = rs.getString("pcode");
+				  year = rs.getString("year"); 
+				  buykg = rs.getFloat("buykg");
+				  tcost = rs.getFloat("tcost");
+				  avgntcost = rs.getFloat("avgntcost");
+				  id = pcodeyear_exist_in_vege_cost_price_year("vege_cost_price_year",pcode,year);
+				  debug("id:"+id + "\tpcode:"+pcode+"\tyear:"+year);
+				  if (id >= 0){ //if exist then simply update the record
+					  sql = "UPDATE vege_cost_price_year SET "
+					  		+ " `buykg`="+buykg + ", "
+					  		+ " `avgntcost`="+avgntcost + ", "
+					  		+ " `tcost`="+tcost + ", "
+					  		+ " `gp`= ((avgntprice-"+avgntcost + ")/avgntprice ) * 100"
+					  		+" WHERE `id`='"+ id  +"'";
+					  debug("update id:"+id+"   sql:"+sql);
+					  statinsert = con.createStatement();
+					  statinsert.executeUpdate(sql);
+					  
+				  }else{
+					  sql = "INSERT into vege_cost_price_year VALUES(NULL,'"+pcode +"',"
+							  + "0," 
+							  + buykg +"," 
+							  + "0," 
+							  + Float.toString(avgntcost) + ","
+							  + "0," 
+							  + "0," 
+							  + Float.toString(tcost) + ","
+							  + year + ")";				  
+					  debug(sql);
+					  statinsert = con.createStatement();
+					  statinsert.executeUpdate(sql);					  
+				  }
+					  
+			  }
+			  
+			  
+		  }  catch(SQLException e) { debug("CreateDB Exception :" + e.toString());  } 
+		  
+		
+	}	
+	
+	public void createTable_vege_cost_price_year_OLD(){
 		String sql = null;
 		ResultSet rscost = null;
 		ResultSet rsprice = null;

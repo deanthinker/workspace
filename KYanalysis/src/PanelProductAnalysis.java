@@ -18,7 +18,6 @@ import java.util.Calendar;
 import java.util.Vector;
 
 
-
 //import com.mysql.jdbc.Statement;
 
 import org.jfree.chart.ChartFactory;
@@ -239,16 +238,16 @@ public class PanelProductAnalysis extends JPanel {
 		XYSeries dataEXPSOLDKG = new XYSeries("外銷重量");
 		XYSeries dataDOMSOLDKG = new XYSeries("內銷重量");
 		
-		Vector<KeyValue_int_float> vecBUYFOREIGNKG = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecBUYFOREIGNKG = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"buykg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecBUYFOREIGNKG){dataBUYFOREIGNKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data		
 		
-		Vector<KeyValue_int_float> vecBUYTWKG = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecBUYTWKG = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"buykg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecBUYTWKG){dataBUYTWKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 		
-		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecEXPSOLDKG){dataEXPSOLDKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 
-		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecDOMSOLDKG){dataDOMSOLDKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 		
 		final XYSeriesCollection xyseriescollection2 = new XYSeriesCollection();
@@ -547,16 +546,16 @@ public class PanelProductAnalysis extends JPanel {
 		XYSeries dataEXPSOLDKG = new XYSeries("外銷重量");
 		XYSeries dataDOMSOLDKG = new XYSeries("內銷重量");
 		
-		Vector<KeyValue_int_float> vecBUYFOREIGNKG = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecBUYFOREIGNKG = db.getKeyValue_int_float_BUYFOREIGN(panelSearchPcode.selectedpcode,"buykg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecBUYFOREIGNKG){dataBUYFOREIGNKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data		
 		
-		Vector<KeyValue_int_float> vecBUYTWKG = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecBUYTWKG = db.getKeyValue_int_float_BUYTW(panelSearchPcode.selectedpcode,"buykg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecBUYTWKG){dataBUYTWKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 		
-		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecEXPSOLDKG = db.getKeyValue_int_float_EXPSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecEXPSOLDKG){dataEXPSOLDKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 
-		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"sumqty");//將db資料存入vector 
+		Vector<KeyValue_int_float> vecDOMSOLDKG = db.getKeyValue_int_float_DOMSOLD(panelSearchPcode.selectedpcode,"soldkg");//將db資料存入vector 
 		for (KeyValue_int_float kv : vecDOMSOLDKG){dataDOMSOLDKG.add((int)kv.key, Math.round(kv.value));	} //資料轉入圖表data
 		
 		final XYSeriesCollection xyseriescollection1 = new XYSeriesCollection();
