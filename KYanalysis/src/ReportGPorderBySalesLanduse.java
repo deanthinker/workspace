@@ -49,18 +49,21 @@ import javax.swing.JComboBox;
 
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 
 
 
-public class ReportGPorderByLanduse extends JDialog {
-
+public class ReportGPorderBySalesLanduse extends JDialog {
+	JCheckBox chkMarkGP = null;
+	JComboBox<String> cbxMarkGPlogic = null;
+	JComboBox<String> cbxMarkGP = null;
 	JComboBox<String> cbxProductionYS = null;
 	JComboBox<String> cbxProductionYE = null;
 	JComboBox<String> cbx_rangesoldkg_logic = null;
 	JComboBox<String> cbx_gp_logic = null;
 	JComboBox<String> cbx_gp_percent = null;
 	JComboBox<String> cbx_croplist = null;
-	JRadioButton rad_sortLand, rad_sortProdkg = null;
+	JRadioButton rad_sortSales, rad_sortSoldkg, rad_sortGP = null;
 	JComboBox cbx_newprodyr = null;
 	ButtonGroup grp_rad_sort = new ButtonGroup();
 	
@@ -84,7 +87,7 @@ public class ReportGPorderByLanduse extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public ReportGPorderByLanduse() {
+	public ReportGPorderBySalesLanduse() {
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		con = db.getConnection();
 		showUI();
@@ -92,8 +95,8 @@ public class ReportGPorderByLanduse extends JDialog {
 	
 	private void showUI(){
 		JPanel contentPanel = new JPanel();		
-		setTitle("生產價值毛利分析");
-		setBounds(100, 100, 458, 355);
+		setTitle("銷售排名毛利分析");
+		setBounds(100, 100, 458, 403);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -173,7 +176,7 @@ public class ReportGPorderByLanduse extends JDialog {
 		
 		JPanel panel_mid = new JPanel();
 		contentPanel.add(panel_mid);
-		panel_mid.setLayout(new GridLayout(2, 1, 0, 0));
+		panel_mid.setLayout(new GridLayout(3, 1, 0, 0));
 		
 		JPanel panel_2 = new JPanel();
 		FlowLayout flowLayout_2 = (FlowLayout) panel_2.getLayout();
@@ -183,16 +186,16 @@ public class ReportGPorderByLanduse extends JDialog {
 		JLabel lblSortBy = new JLabel("排序");
 		panel_2.add(lblSortBy);
 		
-		rad_sortLand = new JRadioButton("生產總面積");
-		rad_sortLand.setSelected(true);
-		panel_2.add(rad_sortLand);
-		grp_rad_sort.add(rad_sortLand);
+		rad_sortSales = new JRadioButton("銷售金額");
+		rad_sortSales.setSelected(true);
+		panel_2.add(rad_sortSales);
+		grp_rad_sort.add(rad_sortSales);
 		
-		rad_sortProdkg = new JRadioButton("生產總重");
-		panel_2.add(rad_sortProdkg);
-		grp_rad_sort.add(rad_sortProdkg);
+		rad_sortSoldkg = new JRadioButton("銷售總重");
+		panel_2.add(rad_sortSoldkg);
+		grp_rad_sort.add(rad_sortSoldkg);
 		
-		JRadioButton rad_sortGP = new JRadioButton("毛利");
+		rad_sortGP = new JRadioButton("毛利");
 		panel_2.add(rad_sortGP);
 		grp_rad_sort.add(rad_sortGP);
 		
@@ -212,12 +215,51 @@ public class ReportGPorderByLanduse extends JDialog {
 		JLabel lblYear = new JLabel("年內視為新產品");
 		panel_3.add(lblYear);
 		
+		JPanel panel_4 = new JPanel();
+		FlowLayout flowLayout_4 = (FlowLayout) panel_4.getLayout();
+		flowLayout_4.setAlignment(FlowLayout.LEFT);
+		panel_mid.add(panel_4);
+		
+		chkMarkGP = new JCheckBox();
+		chkMarkGP.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (chkMarkGP.isSelected()){
+					cbxMarkGPlogic.setEnabled(true);
+					cbxMarkGP.setEnabled(true);
+				}
+				else{
+					cbxMarkGPlogic.setEnabled(false);
+					cbxMarkGP.setEnabled(false);
+				}
+			}
+		});
+		panel_4.add(chkMarkGP);
+		
+		JLabel label = new JLabel("標記毛利");
+		panel_4.add(label);
+		
+		cbxMarkGPlogic = new JComboBox<String>();
+		cbxMarkGPlogic.setModel(new DefaultComboBoxModel(new String[] {">=", "<="}));
+		panel_4.add(cbxMarkGPlogic);
+		
+		cbxMarkGP = new JComboBox<String>();
+		cbxMarkGP.setModel(new DefaultComboBoxModel(new String[] {"0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100"}));
+		panel_4.add(cbxMarkGP);
+		
+		JLabel label_3 = new JLabel("%");
+		panel_4.add(label_3);
+		
+		//default setting  mark <= 40%
+		chkMarkGP.setSelected(true);
+		cbxMarkGPlogic.setSelectedIndex(1);
+		cbxMarkGP.setSelectedIndex(8);
+		
 		
 		JPanel panel_bottom = new JPanel();
 		contentPanel.add(panel_bottom);
 		panel_bottom.setLayout(null);
 		
-		JLabel label_2 = new JLabel("生產計畫期間");
+		JLabel label_2 = new JLabel("銷售統計期間");
 		label_2.setBounds(10, 23, 82, 15);
 		panel_bottom.add(label_2);
 		
@@ -266,64 +308,72 @@ public class ReportGPorderByLanduse extends JDialog {
 										.setBorder(stl.pen1Point())
                                         .setBackgroundColor(Color.LIGHT_GRAY);
 
-		TextColumnBuilder<Integer>  colrow  = col.reportRowNumberColumn("排名").setWidth(3);
-		TextColumnBuilder<String>  colnewp  = col.column("上市", "newp", type.stringType()).setWidth(3);
-		TextColumnBuilder<String>  colpcode  = col.column("品編", "pcode", type.stringType()).setWidth(4);
-		TextColumnBuilder<String>  colpcname  = col.column("品種名稱", "pcname", type.stringType()).setWidth(6);
-		TextColumnBuilder<String>  colcrop  = col.column("作物", "crop", type.stringType()).setWidth(4);
-		TextColumnBuilder<BigDecimal>  collanduse  = col.column("占地甲", "landuse", type.bigDecimalType())
+		TextColumnBuilder<Integer>  colrow  = col.reportRowNumberColumn("排名").setWidth(2);
+		TextColumnBuilder<String>  colnewp  = col.column("上市", "newp", type.stringType()).setWidth(2);
+		TextColumnBuilder<String>  colpcode  = col.column("品編", "pcode", type.stringType()).setWidth(2);
+		TextColumnBuilder<String>  colpcname  = col.column("品種名稱", "pcname", type.stringType()).setWidth(4);
+		TextColumnBuilder<String>  colcrop  = col.column("作物", "crop", type.stringType()).setWidth(3);
+		TextColumnBuilder<BigDecimal>  colsales  = col.column("銷售(NT萬)", "sales", type.bigDecimalType())
 			.setPattern("#,##0.0")
 			.setWidth(3);
-		TextColumnBuilder<BigDecimal>  collandperc  = col.column("占地%", "landperc", type.bigDecimalType())
+		TextColumnBuilder<BigDecimal>  colsalesper  = col.column("占比%", "sper", type.bigDecimalType())
 			.setPattern("#,##0.0")
-			.setWidth(3);		
+			.setWidth(2);		
 		TextColumnBuilder<BigDecimal>  colrunper  = col.column("累計%", "runper", type.bigDecimalType())
 				.setPattern("#,##0.0")
-				.setWidth(3);	
-		TextColumnBuilder<BigDecimal>  colprodkg  = col.column("產重Kg", "prodkg", type.bigDecimalType())
-			.setPattern("#,##0.0")	
-			.setWidth(3);
-		TextColumnBuilder<String>  collastdeal  = col.column("近期交易", "lastdeal", type.stringType())
-			.setHorizontalAlignment(HorizontalAlignment.CENTER)
-			.setWidth(3);
-		TextColumnBuilder<BigDecimal>  colavgntprice  = col.column("近期售價(NT/Kg)", "avgntprice", type.bigDecimalType())
-			.setPattern("#,##0")
-			.setWidth(4);
-		TextColumnBuilder<BigDecimal>  colavgntcost  = col.column("近期成本(NT/Kg)", "avgntcost", type.bigDecimalType())
-			.setPattern("#,##0")
-			.setWidth(4);
-		TextColumnBuilder<BigDecimal>  colavggp  = col.column("近期毛利%", "avggp", type.bigDecimalType())
+				.setWidth(2);	
+		TextColumnBuilder<BigDecimal>  colsoldkg  = col.column("銷售Kg", "soldkg", type.bigDecimalType())
 			.setPattern("#,##0.0")
 			.setWidth(3);
-		
+		TextColumnBuilder<BigDecimal>  collanduse  = col.column("占地甲", "landuse", type.bigDecimalType())
+				.setPattern("#,##0.0")
+				.setWidth(2);
+			TextColumnBuilder<BigDecimal>  collandperc  = col.column("占地%", "landperc", type.bigDecimalType())
+				.setPattern("#,##0.0")
+				.setWidth(2);		
+			TextColumnBuilder<BigDecimal>  collrunper  = col.column("累計%", "lrunper", type.bigDecimalType())
+					.setPattern("#,##0.0")
+					.setWidth(2);		
+		TextColumnBuilder<String>  collastdeal  = col.column("近期交易", "lastdeal", type.stringType())
+			.setHorizontalAlignment(HorizontalAlignment.CENTER)
+			.setWidth(2);
+		TextColumnBuilder<BigDecimal>  colavgntprice  = col.column("近期售價(NT/Kg)", "avgntprice", type.bigDecimalType())
+			.setPattern("#,##0")
+			.setWidth(3);
+		TextColumnBuilder<BigDecimal>  colavgntcost  = col.column("近期成本(NT/Kg)", "avgntcost", type.bigDecimalType())
+			.setPattern("#,##0")
+			.setWidth(3);
+		TextColumnBuilder<BigDecimal>  colavggp  = col.column("近期毛利%", "avggp", type.bigDecimalType())
+			.setPattern("#,##0.0")
+			.setWidth(2);
+		TextColumnBuilder<String>  colmark  = col.column("*", "mark", type.stringType()).setWidth(1);
+		/*
 		TextColumnBuilder<BigDecimal> colsort;
 		
-		if (rad_sortLand.isSelected())
-			colsort = collanduse;
-		else if (rad_sortProdkg.isSelected())
-			colsort = colprodkg;
+		if (rad_sortSales.isSelected())
+			colsort = colsales;
+		else if (rad_sortSoldkg.isSelected())
+			colsort = colsoldkg;
 		else
 			colsort = colavggp;
-
-		title = "生產價值毛利分析 ";
+		 */
+		title = "銷售排名毛利分析 ";
 		
 		
 		if (cbx_croplist.getSelectedIndex() > 0)
 			title = title + " [作物: " + (String)cbx_croplist.getSelectedItem() +"]";
 		
-		if (rad_sortLand.isSelected())
-			title = title + " [以生產占地排序]";
-		else if (rad_sortProdkg.isSelected())
-			title = title + " [以生產重量排序]";
+		if (rad_sortSales.isSelected())
+			title = title + " [以銷售額排序]";
+		else if (rad_sortSoldkg.isSelected())
+			title = title + " [以銷售量排序]";
 		else
 			title = title + " [以毛利排序]";
 		
 		if (cbx_gp_percent.getSelectedIndex() > 0)
 			title = title + "  [毛利 " + cbx_gp_logic.getSelectedItem() + cbx_gp_percent.getSelectedItem() + "%" + "]  ";
 				
-		subtitle = "生產期間:" + ys +  " - " + ye;
-
-		
+		subtitle = "銷售統計期間:" + ys +  " - " + ye;		
 		
 		ColumnGroupBuilder itemGroup = grp.group(colcrop);
 		itemGroup.setPrintSubtotalsWhenExpression(exp.printWhenGroupHasMoreThanOneRow(itemGroup));		
@@ -333,16 +383,15 @@ public class ReportGPorderByLanduse extends JDialog {
 				.setColumnTitleStyle(columnTitleStyle)
 			  //.setTemplate(Templates.reportTemplate)
 				.setPageFormat(PageType.A4, PageOrientation.LANDSCAPE)
-			  .columns(colrow, colnewp, colpcode, colcrop, colpcname, collanduse, collandperc, colrunper, colprodkg, collastdeal, colavgntprice, colavgntcost, colavggp)
+			  .columns(colrow, colnewp, colpcode, colcrop, colpcname, colsales, colsalesper, colrunper, colsoldkg, collanduse, collandperc, collrunper, collastdeal, colavgntprice, colavgntcost, colavggp, colmark)
 			  .title(cmp.horizontalList()
 					.add(
 					cmp.text(title).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.LEFT),
 					cmp.text(subtitle).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT)).newRow()
 					  .add(cmp.filler().setStyle(stl.style().setTopBorder(stl.pen2Point())).setFixedHeight(10)))
-			  .sortBy(desc(colsort))
 			  
 			  .pageFooter(Templates.footerComponent)
-			  .setDataSource(getJRDS_GPlanduseParam())
+			  .setDataSource(getJRDS_GPsalesParam())
 			  
 			  .show(false);
 			
@@ -351,51 +400,65 @@ public class ReportGPorderByLanduse extends JDialog {
 		}
 	}
 
-	private JRDataSource getJRDS_GPlanduseParam() {
+	private JRDataSource getJRDS_GPsalesParam() {
 		Statement stat = null;
 		ResultSet rs = null;
-		DRDataSource dataSource = new DRDataSource("pcode", "newp", "crop", "pcname", "landuse", "landperc", "runper", "prodkg", "lastdeal", "avgntprice", "avgntcost", "avggp");
+		DRDataSource dataSource = new DRDataSource("pcode", "newp", "crop", "pcname", "sales", "sper", "runper", "soldkg", "landuse", "landperc", "lrunper", "lastdeal", "avgntprice", "avgntcost", "avggp", "mark");
 		float avgntprice = 0;
 		float avgntcost = 0;
 		float avggp = 0;
+		float sales = 0;
+		float salesper = 0;
+		float runper = 0;
+		float soldkg = 0;
 		float landuse = 0;
 		float landperc = 0;
-		float runper = 0;
-		float prodkg = 0;
+		float lrunper = 0;
+		String mark = "";
+		
 		String lastdeal = "";
 		String ys = (String)cbxProductionYS.getSelectedItem();
 		String ye = (String)cbxProductionYE.getSelectedItem();
+		float totalLand = db.getPcodePeriod_rangeLanduse("ALL",ys,ye);
+		
 		String pcode = "";
 		String crop = "";
 		String pcname = "";
 		String newp = "";
 
 		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
-		String wherelevel2 =  "level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
+		
+		String wherelevel2 ="";  
+		if (cbx_croplist.getSelectedIndex()!=0) //the first item does not apply filter
+			wherelevel2 = " and level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
+
 		String wheregp = " gp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
 		String whereclause = "";
-		
 		if (cbx_croplist.getSelectedIndex() == 0) //all crop
 			whereclause = whereyear;
 		else
 			whereclause = whereyear + " and " + wherelevel2;
+
+		String orderclause ="";		
+		if (rad_sortSales.isSelected())
+			orderclause = " ts";
+		else if (rad_sortSoldkg.isSelected())
+			orderclause = " skg";
+		else
+			orderclause = " gp";
 		
 		String sql =
-		"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, firstdeal, lastdeal, avgntcost, avgntprice, gp from" 
-		
-		+" (SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/TT.tland) * 100, 2) as perc, prodkg, year as prodyr"
-		+" FROM(SELECT *, sum(landsize) as sland, sum(qty) as prodkg "
-		+" FROM market.pro130 where " + whereclause + " group by pcode order by sland desc, prodkg desc) as A,"
-		+" (SELECT sum(landsize) as tland from pro130 where " + whereyear + ") as TT) as t1"
-
-		+" left join" 
-
-		+" (Select b.*, firstdeal, lastdeal from integratedgp as b inner join "
-		+" (SELECT pcode, min(year) as firstdeal, max(year) as lastdeal FROM integratedgp where year < 2099 group by pcode) as a"  //year above 2099 is not valid data
-		+" on a.pcode = b.pcode and a.lastdeal = b.year ) as t2 "  
-		
-		+" on t1.pcode = t2.pcode "
-		+" where " + wheregp;
+				"SELECT *, (@running := @running + sper) FROM "
+				+"( "
+				+"	SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, tc/10000 as tc, (ts/t2.totalsales)*100 as sper, lastdeal, (ts/skg) as avgprice, (tc/bkg) as avgcost, (((ts/skg)-(tc/bkg))/(ts/skg)*100) as gp from "
+				+"	( "
+				+"		(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
+				+"		(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
+				+"		(SELECT pcode, min(year)  as firstdeal, max(year) as lastdeal FROM market.integratedgp where year < 2099 group by pcode ) as t3, "
+				+"		vege_prod as v"
+				+"	) "
+				+"	WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode" 
+				+") as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc ";
 		
 		System.out.println(sql);
 		try {
@@ -405,29 +468,52 @@ public class ReportGPorderByLanduse extends JDialog {
 				pcode = rs.getString("pcode");
 				crop = rs.getString("level2");
 				pcname = rs.getString("pcname");
-				landuse = rs.getFloat("land");
-				landperc = rs.getFloat("perc");
-				runper = runper + landperc;
-				prodkg = rs.getFloat("prodkg");
+				sales = rs.getFloat("ts");
+				salesper = rs.getFloat("sper");
+				runper = runper + salesper; 
+				soldkg = rs.getFloat("skg");
+				
+				landuse = db.getPcodePeriod_rangelanduse(pcode, ys, ye);
+				landperc = landuse / totalLand * 100;
+				lrunper = lrunper + landperc;
+				
 				lastdeal = rs.getString("lastdeal");
-				avgntprice = rs.getFloat("avgntprice");
-				avgntcost = rs.getFloat("avgntcost");
+				avgntprice = rs.getFloat("avgprice");
+				avgntcost = rs.getFloat("avgcost");
 				avggp = rs.getFloat("gp");
 				
 				if ( YE - rs.getInt("firstdeal") < Integer.valueOf(cbx_newprodyr.getSelectedItem().toString()) )
 					newp = "<" + cbx_newprodyr.getSelectedItem().toString() + "Yr";
 				else
 					newp = rs.getString("firstdeal");
+
+				if ( chkMarkGP.isSelected()){
+					if (cbxMarkGPlogic.getSelectedItem().equals(">=")){
+						if (avggp >= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+							mark = "*";
+						else
+							mark = "";
+					}else{
+						if (avggp <= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+							mark = "*";
+						else
+							mark = "";						
+					}
+				}					
 				
 				dataSource.add(pcode, newp, crop, pcname, 
+						new BigDecimal(sales),
+						new BigDecimal(salesper),
+						new BigDecimal(runper),
+						new BigDecimal(soldkg),
 						new BigDecimal(landuse),
 						new BigDecimal(landperc),
-						new BigDecimal(runper),
-						new BigDecimal(prodkg),
+						new BigDecimal(lrunper),
 						lastdeal, 
 						new BigDecimal(avgntprice), 
 						new BigDecimal(avgntcost),
-						new BigDecimal(avggp));
+						new BigDecimal(avggp), 
+						mark);
 			}
 			rs.close();
 			stat.close();

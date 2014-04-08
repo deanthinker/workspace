@@ -193,6 +193,81 @@ public class KYdb {
 		return soldkg;
 	}	
 
+	public float getPcodePeriod_rangeLanduse(String pcode, String ys, String ye){ //期間總用地
+		Statement stat = null;
+		ResultSet rs = null;
+		float land =0;
+		
+		String sql = "";
+		
+		if (pcode.equalsIgnoreCase("ALL")){
+			sql = "SELECT sum(landsize) as land from pro130 where " 
+					  + " year >= " + ys + " and "
+					  + " year <= " + ye;  
+		}
+		else{
+			sql = "SELECT sum(landsize) as land from pro130 where " 
+					  + " pcode = '" + pcode + "' and "
+					  + " year >= " + ys + " and "
+					  + " year <= " + ye  
+					  + " group by pcode ";
+		}
+		//debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			if (rs.next()) { 
+				land = rs.getFloat("land"); //return 1st record
+			}else{
+				land = 0;
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getPcodePeriod_rangeLanduse Exception :" + e.toString());
+		}
+		return land;
+	}	
+	
+	public float getPcodePeriod_rangeProdkg(String pcode, String ys, String ye){ //期間總產量
+		Statement stat = null;
+		ResultSet rs = null;
+		float prodkg =0;
+		
+		String sql = "";
+		
+		if (pcode.equalsIgnoreCase("ALL")){
+			sql = "SELECT sum(qty) as prodkg from pro130 where " 
+					  + " year >= " + ys + " and "
+					  + " year <= " + ye;  
+		}
+		else{
+			sql = "SELECT sum(qty) as prodkg from pro130 where " 
+					  + " pcode = '" + pcode + "' and "
+					  + " year >= " + ys + " and "
+					  + " year <= " + ye  
+					  + " group by pcode ";
+		}
+		
+		//debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			if (rs.next()) { 
+				prodkg = rs.getFloat("prodkg"); //return 1st record
+			}else{
+				prodkg = 0;
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getPcodePeriod_rangeProdkg Exception :" + e.toString());
+		}
+		return prodkg;
+	}		
+	
 	public float getPcodePeriod_rangesoldkg(String pcode, String ys, String ye){ //期間總銷量
 		Statement stat = null;
 		ResultSet rs = null;
@@ -221,6 +296,79 @@ public class KYdb {
 		return soldkg;
 	}		
 
+	public float getPcodePeriod_rangeincomeIntegrated(String pcode, String ys, String ye){ //期間pcode總銷量
+		Statement stat = null;
+		ResultSet rs = null;
+		float sales =0;
+		String sql = "";
+		//return NT萬
+		if (pcode.equalsIgnoreCase("ALL")){
+			sql = "SELECT sum(tsales)/10000 as tsales FROM market.integratedgp where "
+					+ " year >= " +ys + " and "
+					+ " year <= " +ye; 
+		}
+		else{
+			sql = "SELECT sum(tsales)/10000 as tsales FROM market.integratedgp where "
+				+ " pcode = '" + pcode + "' and "
+				+ " year >= " +ys + " and "
+				+ " year <= " +ye 
+				+ " group by pcode";
+		}
+		//debug(sql);
+		//should only return 1 record
+		
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			if (rs.next()) { 
+				sales = rs.getFloat("tsales"); //return 1st record
+			}else{
+				sales = 0;
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getPcodePeriod_rangeincomeIntegrated Exception :" + e.toString());
+		}
+		return sales;
+	}
+	public float getPcodePeriod_rangeActIncomeIntegrated(String pcode, String ys, String ye){ //期間pcode實收
+		Statement stat = null;
+		ResultSet rs = null;
+		float actincome =0;
+		String sql = "";
+		//return NT萬
+		if (pcode.equalsIgnoreCase("ALL")){
+			sql = "select sum((tsales/10000) * (gp/100)) as actincome from integratedgp where "
+					+ " year >= " +ys + " and "
+					+ " year <= " +ye; 
+		}
+		else{
+			sql = "select sum((tsales/10000) * (gp/100)) as actincome from integratedgp where "
+					+ " pcode = '" + pcode + "' and "
+					+ " year >= " +ys + " and "
+					+ " year <= " +ye 
+					+ " group by pcode";
+		}
+		//debug(sql);
+		//should only return 1 record
+		
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			if (rs.next()) { 
+				actincome = rs.getFloat("actincome"); //return 1st record
+			}else{
+				actincome = 0;
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getPcodePeriod_rangeActIncomeIntegrated Exception :" + e.toString());
+		}
+		return actincome;
+	}
+		
 	public float getPcodePeriod_rangeincome(String pcode, String ys, String ye){ //期間總銷量
 		Statement stat = null;
 		ResultSet rs = null;

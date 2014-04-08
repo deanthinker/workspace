@@ -305,7 +305,7 @@ public class ReportGPorderBySales extends JDialog {
 		else
 			colsort = colavggp;
 		 */
-		title = "生產價值毛利分析 ";
+		title = "銷售排名毛利分析 ";
 		
 		
 		if (cbx_croplist.getSelectedIndex() > 0)
