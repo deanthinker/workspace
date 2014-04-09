@@ -330,8 +330,7 @@ public class Start {
 		splitpanel.add(makeStatChartPanel(), "right");
 		return splitpanel;
 	}
-	
-	
+		
 	protected JComponent makeProductionTabPanel() {
 		JSplitPane panel = new JSplitPane();
 		panel.add(makeProductionSettingPanel(), "left");
@@ -542,6 +541,19 @@ public class Start {
 		});
 		buttonPanel.add(btnGPlanduseActincome);
 		
+		JButton btnGPActualIncomeLanduse = new JButton("銷售排名(實收 +占地)");
+		btnGPActualIncomeLanduse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					ReportGPorderByActualIncomeLanduse win = new ReportGPorderByActualIncomeLanduse();
+					win.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}					
+			}
+		});
+		buttonPanel.add(btnGPActualIncomeLanduse);
+		
 		JButton btnGPlanduse = new JButton("生產價值(占地)");
 		buttonPanel.add(btnGPlanduse);
 		btnGPlanduse.addActionListener(new ActionListener() {
@@ -589,16 +601,37 @@ public class Start {
 			}
 		});
 		
-		JButton btnNewButton = new JButton("銷售排名(營收+占地)");
-		buttonPanel.add(btnNewButton);
+
 		
-		//測試開啟新視窗  但是子視窗一旦關閉  整個程式都會一起被關閉
-		//此問題還尚待釐清, DynamicReport關閉時也是會有一樣的問題
-		//初步判定問題應該是相同  主視窗是否有需要變更特別設定  
-		
+		JButton btnGPSalesLanduse = new JButton("銷售排名(營收+占地)");
+		buttonPanel.add(btnGPSalesLanduse);
+		btnGPSalesLanduse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					ReportGPorderBySalesLanduse win = new ReportGPorderBySalesLanduse();
+					win.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}					
+			}
+		});
 		
 		JButton btnAvgGPWeightReport = new JButton("近期/平均  毛利/重量 排名"); 
 		buttonPanel.add(btnAvgGPWeightReport);
+		btnAvgGPWeightReport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							ReportGPSoldkgParam win = new ReportGPSoldkgParam();
+							win.setVisible(true);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		});
 		
 		JButton btnForeignDomesticPriceCompareReport = new JButton("品種國內外售價比較表");
 		buttonPanel.add(btnForeignDomesticPriceCompareReport);
@@ -616,30 +649,8 @@ public class Start {
 				});
 			}
 		});
-		btnAvgGPWeightReport.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ReportGPSoldkgParam win = new ReportGPSoldkgParam();
-							win.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				try {
-					ReportGPorderBySalesLanduse win = new ReportGPorderBySalesLanduse();
-					win.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}					
-			}
-		});
+
+
 
 
 		
@@ -748,7 +759,6 @@ public class Start {
 	}
 
 	protected JComponent makeProductionSettingPanel() {
-		
 		JPanel settingpanel = new JPanel();
 		settingpanel.setBorder(new TitledBorder(null, "Settings",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
