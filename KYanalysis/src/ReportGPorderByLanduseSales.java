@@ -503,7 +503,8 @@ public class ReportGPorderByLanduseSales extends JDialog {
 						lastdeal, 
 						new BigDecimal(avgntprice), 
 						new BigDecimal(avgntcost),
-						new BigDecimal(avggp));
+						new BigDecimal(avggp), 
+						mark);
 			}
 			rs.close();
 			stat.close();

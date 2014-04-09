@@ -525,7 +525,24 @@ public class Start {
 		settingpanel.add(buttonPanel);
 		buttonPanel.setLayout(new GridLayout(4, 2, 0, 0));
 		
-		JButton btnGPlanduse = new JButton("生產價值毛利分析(占地)");
+		JButton btnGPlanduseActincome = new JButton("生產價值(占地+實收)");
+		btnGPlanduseActincome.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							ReportGPorderByLanduseActualIncome win = new ReportGPorderByLanduseActualIncome();
+							win.setVisible(true);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		});
+		buttonPanel.add(btnGPlanduseActincome);
+		
+		JButton btnGPlanduse = new JButton("生產價值(占地)");
 		buttonPanel.add(btnGPlanduse);
 		btnGPlanduse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -555,24 +572,7 @@ public class Start {
 			}
 		});
 		
-		JButton btnGPlanduseActincome = new JButton("生產價值(占地+實收)");
-		btnGPlanduseActincome.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ReportGPorderByLanduseActualIncome win = new ReportGPorderByLanduseActualIncome();
-							win.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		buttonPanel.add(btnGPlanduseActincome);
-		
-		JButton btnGPSales = new JButton("銷售排名毛利分析(營收比)");
+		JButton btnGPSales = new JButton("銷售排名(營收比)");
 		buttonPanel.add(btnGPSales);
 		btnGPSales.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
