@@ -67,9 +67,10 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 	JComboBox<String> cbx_gp_percent = null;
 	JComboBox<String> cbx_croplist = null;
 	JRadioButton rad_sortSoldkg, rad_sortLand, rad_sortActincome, rad_sortSales, rad_sortLandearn = null;
+	JRadioButton radRecentGP, radAvgGP = null;
 	JComboBox cbx_newprodyr = null;
 	ButtonGroup grp_rad_sort = new ButtonGroup();
-	
+	private final ButtonGroup buttonGroup = new ButtonGroup();
 	
 	private int YE = Calendar.getInstance().get(Calendar.YEAR);
 	private KYdb db = new KYdb();
@@ -149,10 +150,11 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
 		panel_top_crop.add(panel);
-				
+
 		JLabel labelCrop = new JLabel("過濾作物");
 		panel.add(labelCrop);
 		labelCrop.setBounds(10, 10, 55, 18);
+		
 		
 		cbx_croplist = new JComboBox<String>(db.getVegeCropVec());
 		panel.add(cbx_croplist);
@@ -189,6 +191,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		JLabel lblSortBy = new JLabel("排序");
 		panel_2.add(lblSortBy);
 
+		
 		rad_sortActincome = new JRadioButton("實收");
 		rad_sortActincome.setSelected(true);
 		panel_2.add(rad_sortActincome);
@@ -237,6 +240,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		FlowLayout flowLayout_4 = (FlowLayout) panel_4.getLayout();
 		flowLayout_4.setAlignment(FlowLayout.LEFT);
 		panel_mid.add(panel_4);
+
 		
 		chkMarkGP = new JCheckBox();
 		chkMarkGP.addActionListener(new ActionListener() {
@@ -274,35 +278,57 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		
 		JPanel panel_bottom = new JPanel();
 		contentPanel.add(panel_bottom);
-		panel_bottom.setLayout(null);
+		panel_bottom.setLayout(new GridLayout(3, 3, 0, 0));
+		
+		JPanel panel_6 = new JPanel();
+		FlowLayout flowLayout_6 = (FlowLayout) panel_6.getLayout();
+		flowLayout_6.setAlignment(FlowLayout.LEFT);
+		panel_bottom.add(panel_6);
+		
+						JLabel lblNewLabel = new JLabel("毛利計算方式");
+						panel_6.add(lblNewLabel);
+						
+						radRecentGP = new JRadioButton("最近毛利");
+						radRecentGP.setSelected(true);
+						buttonGroup.add(radRecentGP);
+						panel_6.add(radRecentGP);
+						
+						radAvgGP = new JRadioButton("期間平均毛利");
+						buttonGroup.add(radAvgGP);
+						panel_6.add(radAvgGP);				
+		
+		JPanel panel_5 = new JPanel();
+		FlowLayout flowLayout_5 = (FlowLayout) panel_5.getLayout();
+		flowLayout_5.setAlignment(FlowLayout.LEFT);
+		panel_bottom.add(panel_5);
 		
 		JLabel label_2 = new JLabel("生產計畫期間");
-		label_2.setBounds(10, 23, 82, 15);
-		panel_bottom.add(label_2);
+		panel_5.add(label_2);
 		
 		cbxProductionYS = new JComboBox<String>(u.create10yearVector());
-		cbxProductionYS.setBounds(93, 17, 64, 21);
-		panel_bottom.add(cbxProductionYS);
+		panel_5.add(cbxProductionYS);
 		
 				cbxProductionYE = new JComboBox<String>(u.create10yearVector());
-				cbxProductionYE.setBounds(171, 17, 69, 21);
-				panel_bottom.add(cbxProductionYE);
+				panel_5.add(cbxProductionYE);
 				
-						cbxProductionYS.addActionListener(new ActionListener() {
-							public void actionPerformed(ActionEvent e) {
-								Vector tv = new Vector();
-								JComboBox<String> combo = (JComboBox) e.getSource();
-								int selectedYear = Integer.valueOf((String) combo
-										.getSelectedItem());
-								// automatically updates YE combo box list
-								cbxProductionYE.removeAllItems();
-								tv = u.createRangeVector(selectedYear, YE-selectedYear);
-								for (int i = 0; i < tv.size(); i++)
-									cbxProductionYE.addItem(tv.get(i).toString());
-								
-				
-							}
-						});
+				JPanel panel_7 = new JPanel();
+				panel_bottom.add(panel_7);
+		
+				cbxProductionYS.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						Vector tv = new Vector();
+						JComboBox<String> combo = (JComboBox) e.getSource();
+						int selectedYear = Integer.valueOf((String) combo
+								.getSelectedItem());
+						// automatically updates YE combo box list
+						cbxProductionYE.removeAllItems();
+						tv = u.createRangeVector(selectedYear, YE-selectedYear);
+						for (int i = 0; i < tv.size(); i++)
+							cbxProductionYE.addItem(tv.get(i).toString());
+						
+		
+					}
+				});
 						
 
 	}
@@ -487,20 +513,50 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 			orderclause = " actincome";
 		else
 			orderclause = " gp";
+		/*
+		 * only shows the sales record within the year range
+		 * then, extracts the production data of those varieties. 
+		 * There may be NO production record within the year range
+		 */ 
 		
-		String sql =
-				"SELECT *, (ts * (gp/100)) as actincome, (@running := @running + sper) FROM "
-				+"( "
-				+"	SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, tc/10000 as tc, (ts/t2.totalsales)*100 as sper, lastdeal, (ts/skg) as avgprice, (tc/bkg) as avgcost, (((ts/skg)-(tc/bkg))/(ts/skg)*100) as gp from "
-				+"	( "
-				+"		(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
-				+"		(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
-				+"		(SELECT pcode, min(year)  as firstdeal, max(year) as lastdeal FROM market.integratedgp where gp > 0 and year < 2099 group by pcode ) as t3, "
-				+"		vege_prod as v"
-				+"	) "
-				+"	WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode" 
-				+") as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc ";
-		
+		String sql = "";
+		if (radRecentGP.isSelected()){
+			sql =
+			"SELECT *, (ts * (avggp/100)) as actincome, (@running := @running + sper) FROM ( "
+			+"		SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, (ts/10000) as ts,  (ts/t2.totalsales)*100 as sper, lastdeal, avgntprice, avgntcost, ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, gp from "
+			+"		( "
+			+"			(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
+
+			+"			(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
+
+			+"			( "
+			+"				Select I.pcode, avgntprice, avgntcost, firstdeal, lastdeal, gp from integratedgp as I, "
+			+"				(SELECT pcode, min(year) firstdeal, max(year) lastdeal FROM integratedgp "
+			+"					where gp > 0 and year < 2099 group by pcode "
+			+"				) as tb "
+			+"				where I.pcode = tb.pcode and I.year = lastdeal "
+			+"			) as t3, "
+
+			+"			vege_prod as v " 
+			+"		) "
+			+"		WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode "
+			+"	) as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc "; 					
+		}
+		else{
+			//TBD
+			sql = "SELECT *, (ts * (gp/100)) as actincome, (@running := @running + sper) FROM "
+			+"( "
+			+"	SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, tc/10000 as tc, (ts/t2.totalsales)*100 as sper, lastdeal, (ts/skg) as avgntprice, (tc/bkg) as avgntcost, (((ts/skg)-(tc/bkg))/(ts/skg)*100) as gp from "
+			+"	( "
+			+"		(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
+			+"		(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
+			+"		(SELECT pcode, max(year) as lastdeal FROM market.integratedgp where gp > 0 and " + whereyear + " and year < 2099 group by pcode ) as t3, "
+			+"		(SELECT pcode, min(year) as firstdeal FROM market.integratedgp where gp > 0 and year < 2099 group by pcode ) as t4, "
+			+"		vege_prod as v"
+			+"	) "
+			+"	WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode and t1.pcode = t4.pcode" 
+			+") as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc ";			
+		}
 		System.out.println(sql);
 		try {
 			stat = con.createStatement();
@@ -519,9 +575,12 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				//System.out.println("landuse:" + landuse);
 				
 				lastdeal = rs.getString("lastdeal");
-				avgntprice = rs.getFloat("avgprice");
-				avgntcost = rs.getFloat("avgcost");
-				avggp = rs.getFloat("gp");
+				avgntprice = rs.getFloat("avgntprice");
+				avgntcost = rs.getFloat("avgntcost");
+				if (radRecentGP.isSelected())
+					avggp = rs.getFloat("gp");
+				else
+					avggp = rs.getFloat("avggp");
 				
 				actincome = rs.getFloat("actincome");
 				actincomeper = (actincome / rangeActincome)*100;
@@ -529,6 +588,8 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				
 				if (landuse != 0)
 					landearn = actincome / landuse; //larger = better
+				else
+					landearn = 0;
 				
 				if ( YE - rs.getInt("firstdeal") < Integer.valueOf(cbx_newprodyr.getSelectedItem().toString()) )
 					newp = "<" + cbx_newprodyr.getSelectedItem().toString() + "Yr";

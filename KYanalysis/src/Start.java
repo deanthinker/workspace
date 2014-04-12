@@ -171,7 +171,9 @@ public class Start {
 		//the following thread is necessary for DJNativeBrowser
 		Thread t = new Thread(){
 		    public void run() { // override Thread's run()
-		  	  NativeInterface.open();
+		  	  /* this is for Tab 銷售版圖 SWTNativeInterface
+		    	NativeInterface.open();
+		  	  */
 		      //UIUtils.setPreferredLookAndFeel();
 		      System.out.println("NativeInterface loading done.");
 		    }			
@@ -554,67 +556,7 @@ public class Start {
 		});
 		buttonPanel.add(btnGPActualIncomeLanduse);
 		
-		JButton btnGPlanduse = new JButton("生產價值(占地)");
-		buttonPanel.add(btnGPlanduse);
-		btnGPlanduse.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ReportGPorderByLanduse win = new ReportGPorderByLanduse();
-							win.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		
-		JButton btnGPlanduseSales = new JButton("生產價值(占地+營收)");
-		buttonPanel.add(btnGPlanduseSales);
-		btnGPlanduseSales.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				try {
-					ReportGPorderByLanduseSales win = new ReportGPorderByLanduseSales();
-					win.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}				
-			}
-		});
-		
-		JButton btnGPSales = new JButton("銷售排名(營收比)");
-		buttonPanel.add(btnGPSales);
-		btnGPSales.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							ReportGPorderBySales win = new ReportGPorderBySales();
-							win.setVisible(true);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
-		
 
-		
-		JButton btnGPSalesLanduse = new JButton("銷售排名(營收+占地)");
-		buttonPanel.add(btnGPSalesLanduse);
-		btnGPSalesLanduse.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				try {
-					ReportGPorderBySalesLanduse win = new ReportGPorderBySalesLanduse();
-					win.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}					
-			}
-		});
 		
 		JButton btnAvgGPWeightReport = new JButton("近期/平均  毛利/重量 排名"); 
 		buttonPanel.add(btnAvgGPWeightReport);
@@ -895,7 +837,9 @@ public class Start {
 		tabbedPane.addTab("內銷客戶分析", null, new PanelCustAnalysis(PanelCustAnalysis.DOMESTIC), null);
 		tabbedPane.addTab("生產計劃", null, makeProductionTabPanel(), null);
 		tabbedPane.addTab("統計排名", null, makeStatisticsTabPanel(), null);
-		tabbedPane.addTab("銷售版圖", null, new PanelBrowser(), null);
+		
+		//disable this tab to make run faster
+		//tabbedPane.addTab("銷售版圖", null, new PanelBrowser(), null);
 		
 		//tabbedPane.addTab("----", null, new PanelInventory(), null);
 
