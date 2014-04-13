@@ -99,7 +99,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 	
 	private void showUI(){
 		JPanel contentPanel = new JPanel();		
-		setTitle("生產價值毛利分析");
+		setTitle("銷售排名貢獻分析");
 		setBounds(100, 100, 458, 403);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -472,7 +472,9 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		float actincomeper = 0;
 		float arunper = 0;
 		float landearn = 1;
-
+		float lprice = 0;
+		float lcost = 0;
+		float lgp = 0;
 		float soldkg = 0;
 		float landuse = 0;
 		float landperc = 0;
@@ -497,7 +499,13 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		if (cbx_croplist.getSelectedIndex()!=0) //the first item does not apply filter
 			wherelevel2 = " and level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
 
-		String wheregp = " gp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
+		String wheregp = "";
+		if (radRecentGP.isSelected()){
+			wheregp = " lgp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
+		}else{
+			wheregp = " avggp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
+		}
+		
 		String whereclause = "";
 		if (cbx_croplist.getSelectedIndex() == 0) //all crop
 			whereclause = whereyear;
@@ -511,52 +519,40 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 			orderclause = " skg";
 		else if (rad_sortActincome.isSelected())
 			orderclause = " actincome";
-		else
-			orderclause = " gp";
+		else{
+			if (radRecentGP.isSelected())
+				orderclause = " lgp";
+			else
+				orderclause = " avggp";					
+			
+		}
+			
 		/*
 		 * only shows the sales record within the year range
 		 * then, extracts the production data of those varieties. 
 		 * There may be NO production record within the year range
 		 */ 
 		
-		String sql = "";
-		if (radRecentGP.isSelected()){
-			sql =
-			"SELECT *, (ts * (avggp/100)) as actincome, (@running := @running + sper) FROM ( "
-			+"		SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, (ts/10000) as ts,  (ts/t2.totalsales)*100 as sper, lastdeal, avgntprice, avgntcost, ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, gp from "
-			+"		( "
-			+"			(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
+		//***known ISSUE the running percent will exceed 100% for unknown reason
+		//***probably due to negative GP values
+		//TBD: should exclude non-seed products eg: U000 Z000...etc
+		
+		String sql = 
+			"SELECT * FROM ( "
+				+"SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, actincome/10000 as actincome, actincome/totalactincome as actper,lastdeal, (ts/skg) as avgntprice, (tc/bkg) as avgntcost, ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, lprice, lcost, lgp from "
+				+"( "
+				+"	(SELECT pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc, sum(tsales * (gp/100)) actincome FROM market.integratedgp where " + whereyear + "  group by pcode )as t1, "
+				+"	(SELECT sum(tsales) totalsales, sum(tsales * (gp/100)) totalactincome FROM market.integratedgp where " + whereyear + ") as t2, "
+				+"	(SELECT pcode, max(year) as lastdeal FROM market.integratedgp where " + whereyear + " and year < 2099 group by pcode ) as t3, "
+			    +"  (SELECT pcode, min(year)  as firstdeal FROM market.integratedgp where year < 2099 group by pcode ) as t4, "
+				+"	(SELECT pcode, year, avgntprice as lprice, avgntcost as lcost, gp as lgp from market.integratedgp) as t5, "
+				+"	vege_prod as v  "
+				+") "
+				+"WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode and t1.pcode = t4.pcode and t1.pcode = t5.pcode and t5.year = lastdeal "
+			
+			+") as TA  where " + wheregp + wherelevel2 + " order by " + orderclause + " desc ";
+		
 
-			+"			(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
-
-			+"			( "
-			+"				Select I.pcode, avgntprice, avgntcost, firstdeal, lastdeal, gp from integratedgp as I, "
-			+"				(SELECT pcode, min(year) firstdeal, max(year) lastdeal FROM integratedgp "
-			+"					where gp > 0 and year < 2099 group by pcode "
-			+"				) as tb "
-			+"				where I.pcode = tb.pcode and I.year = lastdeal "
-			+"			) as t3, "
-
-			+"			vege_prod as v " 
-			+"		) "
-			+"		WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode "
-			+"	) as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc "; 					
-		}
-		else{
-			//TBD
-			sql = "SELECT *, (ts * (gp/100)) as actincome, (@running := @running + sper) FROM "
-			+"( "
-			+"	SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, tc/10000 as tc, (ts/t2.totalsales)*100 as sper, lastdeal, (ts/skg) as avgntprice, (tc/bkg) as avgntcost, (((ts/skg)-(tc/bkg))/(ts/skg)*100) as gp from "
-			+"	( "
-			+"		(SELECT I.pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc FROM integratedgp as I, vege_prod as V where I.pcode = V.pcode " + wherelevel2 + " and " + whereyear + " group by pcode )as t1,"
-			+"		(SELECT sum(tsales) as totalsales FROM market.integratedgp where " + whereyear + ") as t2, "
-			+"		(SELECT pcode, max(year) as lastdeal FROM market.integratedgp where gp > 0 and " + whereyear + " and year < 2099 group by pcode ) as t3, "
-			+"		(SELECT pcode, min(year) as firstdeal FROM market.integratedgp where gp > 0 and year < 2099 group by pcode ) as t4, "
-			+"		vege_prod as v"
-			+"	) "
-			+"	WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode and t1.pcode = t4.pcode" 
-			+") as TA, (select @running:=0) as TB where " + wheregp + " order by " + orderclause + " desc ";			
-		}
 		System.out.println(sql);
 		try {
 			stat = con.createStatement();
@@ -567,6 +563,10 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				pcname = rs.getString("pcname");
 				sales = rs.getFloat("ts");
 				soldkg = rs.getFloat("skg");
+				lprice = rs.getFloat("lprice"); //latest Price
+				lcost = rs.getFloat("lcost"); //latest Cost
+				lgp = rs.getFloat("lgp"); //latest GP
+				avggp = rs.getFloat("avggp"); //average GP
 				
 				landuse = db.getPcodePeriod_rangelanduse(pcode, ys, ye);
 				landperc = (landuse / totalLand) * 100;
@@ -577,10 +577,6 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				lastdeal = rs.getString("lastdeal");
 				avgntprice = rs.getFloat("avgntprice");
 				avgntcost = rs.getFloat("avgntcost");
-				if (radRecentGP.isSelected())
-					avggp = rs.getFloat("gp");
-				else
-					avggp = rs.getFloat("avggp");
 				
 				actincome = rs.getFloat("actincome");
 				actincomeper = (actincome / rangeActincome)*100;
@@ -596,19 +592,28 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				else
 					newp = rs.getString("firstdeal");
 
+				float price, cost, gp=0;
+				if (radRecentGP.isSelected()){
+					price = lprice; cost = lcost; gp = lgp;
+				}else{
+					price = avgntprice; cost = avgntcost; gp = avggp;
+				}				
+				
 				if ( chkMarkGP.isSelected()){
 					if (cbxMarkGPlogic.getSelectedItem().equals(">=")){
-						if (avggp >= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+						if (gp >= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
 							mark = "*";
 						else
 							mark = "";
 					}else{
-						if (avggp <= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+						if (gp <= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
 							mark = "*";
 						else
 							mark = "";						
 					}
 				}					
+
+
 				
 				dataSource.add(pcode, newp, crop, pcname, 
 						new BigDecimal(sales),
@@ -621,9 +626,9 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 						new BigDecimal(landperc),
 						new BigDecimal(lrunper),
 						lastdeal, 
-						new BigDecimal(avgntprice), 
-						new BigDecimal(avgntcost),
-						new BigDecimal(avggp), 
+						new BigDecimal(price), 
+						new BigDecimal(cost),
+						new BigDecimal(gp), 
 						mark);
 			}
 			rs.close();

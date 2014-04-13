@@ -98,7 +98,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 	
 	private void showUI(){
 		JPanel contentPanel = new JPanel();		
-		setTitle("生產價值毛利分析");
+		setTitle("生產價值貢獻分析");
 		setBounds(100, 100, 458, 403);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -150,9 +150,11 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		flowLayout.setAlignment(FlowLayout.LEFT);
 		panel_top_crop.add(panel);
 				
+		
 		JLabel labelCrop = new JLabel("過濾作物");
 		panel.add(labelCrop);
 		labelCrop.setBounds(10, 10, 55, 18);
+		
 		
 		cbx_croplist = new JComboBox<String>(db.getVegeCropVec());
 		panel.add(cbx_croplist);
@@ -188,6 +190,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		
 		JLabel lblSortBy = new JLabel("排序");
 		panel_2.add(lblSortBy);
+		
 		
 		rad_sortLand = new JRadioButton("生產總面積");
 		rad_sortLand.setSelected(true);
@@ -236,8 +239,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		JPanel panel_4 = new JPanel();
 		FlowLayout flowLayout_4 = (FlowLayout) panel_4.getLayout();
 		flowLayout_4.setAlignment(FlowLayout.LEFT);
-		panel_mid.add(panel_4);
-		
+		panel_mid.add(panel_4);		
 		chkMarkGP = new JCheckBox();
 		chkMarkGP.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -380,7 +382,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				.setWidth(3);
 		TextColumnBuilder<String>  collastdeal  = col.column("近期交易", "lastdeal", type.stringType())
 			.setHorizontalAlignment(HorizontalAlignment.CENTER)
-			.setWidth(3);
+			.setWidth(2);
 		TextColumnBuilder<BigDecimal>  colavgntprice  = col.column("近期售價(NT/Kg)", "avgntprice", type.bigDecimalType())
 			.setPattern("#,##0")
 			.setWidth(3);
@@ -476,6 +478,9 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		float actincomeper = 0;
 		float arunper = 0;
 		float landearn = 0;
+		float lprice = 0;
+		float lcost = 0;
+		float lgp = 0;
 		String mark = "";		
 		String lastdeal = "";
 		String ys = (String)cbxProductionYS.getSelectedItem();
@@ -487,66 +492,59 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		String pcname = "";
 		String newp = "";
 
-		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
-		String wherelevel2 =  "level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
-		String wheregp = " gp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
 		String whereclause = "";
+		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
+		String wherelevel2 = "";
+		if (cbx_croplist.getSelectedIndex() >= 1){
+			wherelevel2 = " level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
+		}
+
+		String wheregp = "";
+		if (radRecentGP.isSelected()){
+			wheregp = " lgp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
+		}else{
+			wheregp = " avggp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
+		}
 		
 		if (cbx_croplist.getSelectedIndex() == 0) //all crop
 			whereclause = whereyear;
 		else
 			whereclause = whereyear + " and " + wherelevel2;
 		/*
-		 * only shows production variety of the year range
-		 * then, extracts the sales data of those varieties. 
-		 * There may be NO sales record within the year range
+		 * only shows the sales record within the year range
+		 * then, extracts the production data of those varieties. 
+		 * There may be NO production record within the year range
 		 */ 
-		String sql = "";
 		
-		if (radRecentGP.isSelected()){
-			sql = 
-			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, firstdeal, lastdeal, avgntcost, avgntprice, gp from" 
-			
-			+" (SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/TT.tland) * 100, 2) as perc, prodkg, year as prodyr"
-			+" FROM(SELECT *, sum(landsize) as sland, sum(qty) as prodkg "
-			+" FROM market.pro130 where " + whereclause + " group by pcode order by sland desc, prodkg desc) as A,"
-			+" (SELECT sum(landsize) as tland from pro130 where " + whereyear + ") as TT) as t1"
-	
-			+" left join" 
-	
-			+" (Select b.*, firstdeal, lastdeal from integratedgp as b inner join "
-			+" (SELECT pcode, min(year) as firstdeal, max(year) as lastdeal FROM integratedgp where gp > 0 and year < 2099 group by pcode) as a"  //year above 2099 is not valid data
-			+" on a.pcode = b.pcode and a.lastdeal = b.year ) as t2 "  
-			
-			+" on t1.pcode = t2.pcode "
-			+" where " + wheregp;
-		}
-		else {
-			sql = 
-			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, firstdeal, lastdeal, avgntcost, avgntprice, gp from" 
-			
-			+" (SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/TT.tland) * 100, 2) as perc, prodkg, year as prodyr"
-			+" FROM(SELECT *, sum(landsize) as sland, sum(qty) as prodkg "
-			+" FROM market.pro130 where " + whereclause + " group by pcode order by sland desc, prodkg desc) as A,"
-			+" (SELECT sum(landsize) as tland from pro130 where " + whereyear + ") as TT) as t1"
-	
-			+" left join" 
-	
-			+"(Select ta.*, firstdeal, lastdeal, (ts/skg) avgntprice, (tc/bkg) avgntcost,  ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as gp from "
-			+"	(Select pcode, sum(soldkg) skg, sum(buykg) bkg, sum(tsales) ts, sum(tcost) tc from integratedgp " 
-			+"		where " + whereyear
-			+"		group by pcode "
+		//***known ISSUE the running percent will exceed 100% for unknown reason
+		//***probably due to negative GP values
+		//TBD: should exclude non-seed products eg: U000 Z000...etc
+		
+		String sql = 
+			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, (ts/10000) ts, (actincome/10000) actincome, firstdeal, lastdeal, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM " 
+			+"	(SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/T2.tland) * 100, 2) as perc, prodkg, year as prodyr "
+			+"	FROM  "
+			+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE " + whereclause + " group by pcode order by sland desc, prodkg desc) as T1, "
+			+"		(SELECT sum(landsize) as tland FROM pro130 WHERE " + whereclause + ") as T2 "
+			+"	) as t1 "
+			+"LEFT JOIN "
+			+"(SELECT ta.*, firstdeal, lastdeal, (ts/skg) avgntprice, (tc/bkg) avgntcost,  ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, lgp, lprice, lcost " 
+			+"	FROM "
+			+"	(SELECT pcode, year, gp as lgp, avgntprice as lprice, avgntcost as lcost FROM integratedgp) as latest, "
+			+"	(SELECT pcode, sum(soldkg) skg, sum(buykg) bkg, sum(tsales) ts, sum(tcost) tc, sum(tsales * (gp/100)) actincome FROM integratedgp " 
+			+"		WHERE " + whereyear 
+			+"		GROUP BY pcode "
 			+"	) as ta, "
 			+"	(SELECT pcode, min(year) as firstdeal, max(year) as lastdeal FROM integratedgp " 
-			+"		where gp > 0 and year < 2099 group by pcode "
+			+"		WHERE gp > 0 and " + whereyear + " and year < 2099 GROUP BY pcode "
 			+"	) as tb "
-			+"where tb.pcode = ta.pcode "
-			+") as t2" 
-			
-			+" on t1.pcode = t2.pcode "
-			+" where " + wheregp;
-		}
+			+"WHERE tb.pcode = ta.pcode and tb.pcode = latest.pcode and latest.year = lastdeal "
+			+") as t2 "
 		
+			+"on t1.pcode = t2.pcode "
+			+" where " + wheregp;
+		
+	
 		System.out.println(sql);
 		try {
 			stat = con.createStatement();
@@ -559,10 +557,13 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				landperc = rs.getFloat("perc");
 				runper = runper + landperc;
 				prodkg = rs.getFloat("prodkg");
-				avggp = rs.getFloat("gp");
+				avggp = rs.getFloat("avggp");
+				lprice = rs.getFloat("lprice");
+				lcost = rs.getFloat("lcost");
+				lgp = rs.getFloat("lgp");
 				
 				sales = db.getPcodePeriod_rangeincomeIntegrated(pcode,ys,ye);
-				actincome = sales * (avggp/100);
+				actincome = rs.getFloat("actincome");
 				actincomeper = (actincome / rangeActincome)*100;
 				arunper = arunper + actincomeper;
 				lastdeal = rs.getString("lastdeal");
@@ -580,19 +581,26 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				else
 					newp = rs.getString("firstdeal");
 				
+				float price, cost, gp=0;
+				if (radRecentGP.isSelected()){
+					price = lprice; cost = lcost; gp = lgp;
+				}else{
+					price = avgntprice; cost = avgntcost; gp = avggp;
+				}				
 				if ( chkMarkGP.isSelected()){
 					if (cbxMarkGPlogic.getSelectedItem().equals(">=")){
-						if (avggp >= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+						if (gp >= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
 							mark = "*";
 						else
 							mark = "";
 					}else{
-						if (avggp <= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
+						if (gp <= Integer.valueOf(  (String)(cbxMarkGP.getSelectedItem())  ))
 							mark = "*";
 						else
 							mark = "";						
 					}
-				}					
+				}
+									
 				dataSource.add(pcode, newp, crop, pcname, 
 						new BigDecimal(landuse),
 						new BigDecimal(landperc),
@@ -604,9 +612,9 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 						new BigDecimal(arunper),
 						new BigDecimal(landearn),
 						lastdeal, 
-						new BigDecimal(avgntprice), 
-						new BigDecimal(avgntcost),
-						new BigDecimal(avggp), 
+						new BigDecimal(price), 
+						new BigDecimal(cost),
+						new BigDecimal(gp), 
 						mark);
 			}
 			rs.close();

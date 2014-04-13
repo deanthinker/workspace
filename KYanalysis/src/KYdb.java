@@ -338,16 +338,19 @@ public class KYdb {
 		float actincome =0;
 		String sql = "";
 		//return NT萬
+		//TBD: should exclude non-seed products eg: U000 Z000...etc
 		if (pcode.equalsIgnoreCase("ALL")){
-			sql = "select sum((tsales/10000) * (gp/100)) as actincome from integratedgp where "
+			sql = "select sum(tsales * (gp/100))/10000 as actincome from integratedgp where "
 					+ " year >= " +ys + " and "
-					+ " year <= " +ye; 
+					+ " year <= " +ye + " and "
+					+ " year < 2099 and gp >= 0";
 		}
 		else{
-			sql = "select sum((tsales/10000) * (gp/100)) as actincome from integratedgp where "
+			sql = "select sum(tsales * (gp/100))/10000 as actincome from integratedgp where "
 					+ " pcode = '" + pcode + "' and "
 					+ " year >= " +ys + " and "
-					+ " year <= " +ye 
+					+ " year <= " +ye + " and "
+					+ " year < 2099 and gp >= 0"
 					+ " group by pcode";
 		}
 		//debug(sql);
