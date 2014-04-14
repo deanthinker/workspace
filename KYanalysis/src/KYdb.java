@@ -1114,8 +1114,8 @@ public class KYdb {
 		ResultSet rs = null;
 		float avgntcost = 0;
 		String sql = "SELECT pcode, level2, pcname, pename, invoice_date, custcode, dest_country, "
-				+ " total_weight as qty, "
-				+ " CONCAT('$', FORMAT(((unit_price * toNTrate)), 0)) as NTpricePerKg " 
+				+ " class, total_weight as qty, "
+				+ " CONCAT('$', FORMAT(((unit_price * toNTrate)), 0)) as NTpricePerKg, (unit_price * toUSrate) as USprice " 
 				+ " FROM market.sao430  where "
 				+ " pcode = " + pcode + " and " 
 				+ " invoice_date >= '" + year + "' and invoice_date <= '"+(Integer.valueOf(year)+1)+ "'"; 
@@ -1544,7 +1544,7 @@ public class KYdb {
 		ResultSet rs = null;
 
 		
-		String sql = "SELECT pcode, invoice_date, cust_name, packtype, packprice, actlqty, total_weight, (packprice * actlqty)/total_weight as NTup , class"
+		String sql = "SELECT pcode, invoice_date, cust_name, packtype, class, packprice, actlqty, total_weight, (packprice * actlqty)/total_weight as NTup , class"
 				+ " FROM market.dom430  where "
 				+ " pcode = " + pcode + " and " 
 				+ " invoice_date >= '" + year + "' and invoice_date <= '"+(Integer.valueOf(year)+1)+ "'"; 
