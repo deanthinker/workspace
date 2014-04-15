@@ -825,7 +825,7 @@ public class KYdb {
 		float sales = 0;
 		if (level2 != null){
 			sql = "Select pcode, level2, pcname, sum(total_weight) as sweight, sum(usincome) as susincome , sum(ntincome) as sntincome " 
-					+" from (SELECT *, (total_weight * (unit_price * toUSrate)) as usincome, (total_weight * (unit_price * toNTrate)) as ntincome FROM market.sao430"
+					+" from (SELECT *, (total_pack * (unit_price * toUSrate)) as usincome, (total_pack * (unit_price * toNTrate)) as ntincome FROM market.sao430"
 					+" WHERE year(invoice_date) >= '"+ ys+ "' and "
 					+" year(invoice_date) <= '"+ ye +"' and "
 					+" level2 = '" + level2 +"' ) as t1"
@@ -834,7 +834,7 @@ public class KYdb {
 		}
 		else{
 			sql = "Select pcode, level2, pcname, sum(total_weight) as sweight, sum(usincome) as susincome , sum(ntincome) as sntincome " 
-					+" from (SELECT *, (total_weight * (unit_price * toUSrate)) as usincome, (total_weight * (unit_price * toNTrate)) as ntincome FROM market.sao430"
+					+" from (SELECT *, (total_pack * (unit_price * toUSrate)) as usincome, (total_pack * (unit_price * toNTrate)) as ntincome FROM market.sao430"
 					+" WHERE year(invoice_date) >= '"+ ys+ "' and "
 					+" year(invoice_date) <= '"+ ye +"') as t1 "
 					+" Group by pcode "
@@ -1115,7 +1115,7 @@ public class KYdb {
 		float avgntcost = 0;
 		String sql = "SELECT pcode, level2, pcname, pename, invoice_date, custcode, dest_country, "
 				+ " class, total_weight as qty, "
-				+ " CONCAT('$', FORMAT(((unit_price * toNTrate)), 0)) as NTpricePerKg, (unit_price * toUSrate) as USprice " 
+				+ " CONCAT('$', FORMAT(((unit_price * total_pack * toNTrate)/total_weight), 0)) as ntKgPrice, format((unit_price * total_pack * toUSrate)/total_weight,2) as usKgPrice " 
 				+ " FROM market.sao430  where "
 				+ " pcode = " + pcode + " and " 
 				+ " invoice_date >= '" + year + "' and invoice_date <= '"+(Integer.valueOf(year)+1)+ "'"; 
@@ -1140,18 +1140,20 @@ public class KYdb {
 				switch (dbsrc){
 				case EXPORT:
 					if (crop == null)
-						sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
-							+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
+						sql ="Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+							+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, "
+							+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format(unit_price * toNTrate * total_pack,0) as ntSales " 
 							+ " from sao430 where custcode = '"+ custcode + "' and "
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
-							+ " order by sales desc";
+							+ " order by ntSales desc";
 					else
-						sql ="Select pcode, level2, pcname, pename, invoice_date, unit, total_pack, total_weight, "
-								+ " format(unit_price * toNTrate,0) as NTprice, format(unit_price*toNTrate*total_pack,0) as sales " 
+						sql ="Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+								+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, "
+								+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format(unit_price * toNTrate * total_pack,0) as ntSales " 
 								+ " from sao430 where custcode = '"+ custcode + "' and "
 								+ " level2 = '" + crop + "' and "
 								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
-								+ " order by sales desc";
+								+ " order by ntSales desc";
 					break;
 				case DOMESTIC:
 					if (crop == null)
@@ -1932,8 +1934,8 @@ public class KYdb {
 				+ "sum(total_weight) as sweight, sum(NTtotal) as sNTtotal, sum(UStotal) as sUStotal "
 				+ "FROM (SELECT *, "
 					+ "year(invoice_date) as tyear, "
-					+ "(unit_price * total_weight * toNTrate) as NTtotal, "
-					+ "(unit_price * total_weight * toUSrate) as UStotal "
+					+ "(unit_price * total_pack * toNTrate) as NTtotal, "
+					+ "(unit_price * total_pack * toUSrate) as UStotal "
 					+ " FROM market.sao430) as t1 "
 					+ " where pcode = " + pcode + " and "
 					+ " tyear >= "+ ys + " and tyear <=" + ye
@@ -2311,7 +2313,7 @@ public class KYdb {
 		Vector<PriceData> priceVec = new Vector<PriceData>();
 		
 		String sql ="Select *, (sales/tweight) as up, (@sumsales :=@sumsales + sales) as rs, (@sumweight := @sumweight + tweight) as rw from " 
-				+ " (SELECT *, sum(unit_price * toNTrate * total_weight) as sales, sum(total_weight) as tweight from sao430, (Select @sumsales := 0, @sumweight := 0) r"  
+				+ " (SELECT *, sum(unit_price * toNTrate * total_pack) as sales, sum(total_weight) as tweight from sao430, (Select @sumsales := 0, @sumweight := 0) r"  
 				+ " where level2 like '%"+level2+"%' and year(invoice_date) = '"+year+"' "
 				+ " group by pcode) as t1"
 				+ " order by sales desc;";

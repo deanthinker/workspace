@@ -372,7 +372,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		TextColumnBuilder<BigDecimal>  collandearn  = col.column("¨C¥Ò°^Äm", "landearn", type.bigDecimalType())
 				.setPattern("#,##0.0")	
 				.setWidth(3);		
-		TextColumnBuilder<BigDecimal>  colsoldkg  = col.column("¾P°âKg", "soldkg", type.bigDecimalType())
+		TextColumnBuilder<BigDecimal>  colsoldkg  = col.column("Á`°âKg", "soldkg", type.bigDecimalType())
 			.setPattern("#,##0.0")
 			.setWidth(3);
 		TextColumnBuilder<BigDecimal>  collanduse  = col.column("¥e¦a¥Ò", "landuse", type.bigDecimalType())

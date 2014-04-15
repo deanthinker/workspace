@@ -66,6 +66,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 	JComboBox<String> cbx_croplist = null;
 	JRadioButton rad_sortLand, rad_sortProdkg, rad_sortActincome, rad_sortSales, rad_sortLandearn = null;
 	JRadioButton radRecentGP, radAvgGP = null;
+	JComboBox<String> cbx_skg_logic, cbx_skg =null;
 	JComboBox cbx_newprodyr = null;
 	ButtonGroup grp_rad_sort = new ButtonGroup();
 	
@@ -143,7 +144,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		
 		JPanel panel_top_crop = new JPanel();
 		panel_top.add(panel_top_crop);
-		panel_top_crop.setLayout(new GridLayout(2, 1, 0, 0));
+		panel_top_crop.setLayout(new GridLayout(3, 1, 0, 0));
 		
 		JPanel panel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
@@ -179,6 +180,24 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		
 		JLabel label_1 = new JLabel("%");
 		panel_1.add(label_1);
+		
+		JPanel panel_8 = new JPanel();
+		FlowLayout flowLayout_7 = (FlowLayout) panel_8.getLayout();
+		flowLayout_7.setAlignment(FlowLayout.LEFT);
+		panel_top_crop.add(panel_8);
+		
+		JLabel label_4 = new JLabel("銷售總重過濾條件");
+		panel_8.add(label_4);
+		
+		cbx_skg_logic = new JComboBox<String>();
+		cbx_skg_logic.setModel(new DefaultComboBoxModel(new String[] {">=", "<=", "=", ">", "<"}));
+		cbx_skg_logic.setSelectedIndex(0);
+		panel_8.add(cbx_skg_logic);
+		
+		cbx_skg = new JComboBox<String>();
+		cbx_skg.setModel(new DefaultComboBoxModel(new String[] {"0.5", "1", "1.5", "2", "3", "5", "10", "15", "20", "30", "40", "50", "60", "70", "80", "90", "100", "150", "200", "250", "300", "500", "1000", "2000", "3000", "4000", "5000"}));
+		cbx_skg.setSelectedIndex(1);
+		panel_8.add(cbx_skg);
 		
 		JPanel panel_mid = new JPanel();
 		contentPanel.add(panel_mid);
@@ -381,6 +400,9 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		TextColumnBuilder<BigDecimal>  collandearn  = col.column("每甲貢獻", "landearn", type.bigDecimalType())
 				.setPattern("#,##0.0")	
 				.setWidth(3);
+		TextColumnBuilder<BigDecimal>  colskg  = col.column("總售Kg", "skg", type.bigDecimalType())
+				.setPattern("#,##0")
+				.setWidth(3);
 		TextColumnBuilder<String>  collastdeal  = col.column("近期交易", "lastdeal", type.stringType())
 			.setHorizontalAlignment(HorizontalAlignment.CENTER)
 			.setWidth(2);
@@ -448,7 +470,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				.setColumnTitleStyle(columnTitleStyle)
 			  //.setTemplate(Templates.reportTemplate)
 				.setPageFormat(PageType.A4, PageOrientation.LANDSCAPE)
-			  .columns(colrow, colnewp, colpcode, colcrop, colpcname, collanduse, collandperc, colrunper, colprodkg, colsales, colactincome, colactincomeper, colarunper, collandearn, collastdeal, collskg, colavgntprice, colavgntcost, colavggp, colmark)
+			  .columns(colrow, colnewp, colpcode, colcrop, colpcname, collanduse, collandperc, colrunper, colprodkg, colsales, colactincome, colactincomeper, colarunper, collandearn, colskg, collastdeal, collskg, colavgntprice, colavgntcost, colavggp, colmark)
 			  .title(cmp.horizontalList()
 					.add(
 					cmp.text(title).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.LEFT),
@@ -469,7 +491,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 	private JRDataSource getJRDS_GPlanduseParam() {
 		Statement stat = null;
 		ResultSet rs = null;
-		DRDataSource dataSource = new DRDataSource("pcode", "newp", "crop", "pcname", "landuse", "landperc", "runper", "prodkg", "sales", "actincome", "actincomeper", "arunper", "landearn", "lastdeal", "lskg", "avgntprice", "avgntcost", "avggp", "mark");
+		DRDataSource dataSource = new DRDataSource("pcode", "newp", "crop", "pcname", "landuse", "landperc", "runper", "prodkg", "sales", "actincome", "actincomeper", "arunper", "landearn", "skg","lastdeal", "lskg", "avgntprice", "avgntcost", "avggp", "mark");
 		float avgntprice = 0;
 		float avgntcost = 0;
 		float avggp = 0;
@@ -481,6 +503,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		float actincome = 0;
 		float actincomeper = 0;
 		float arunper = 0;
+		float skg = 0;
 		float landearn = 0;
 		float lskg = 0;
 		float lprice = 0;
@@ -496,8 +519,10 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		String crop = "";
 		String pcname = "";
 		String newp = "";
+		
 
 		String whereclause = "";
+		String whereskg = "";
 		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
 		String wherelevel2 = "";
 		if (cbx_croplist.getSelectedIndex() >= 1){
@@ -510,6 +535,8 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		}else{
 			wheregp = " avggp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
 		}
+		
+		whereskg = " skg " + cbx_skg_logic.getSelectedItem() + " " + cbx_skg.getSelectedItem();
 		
 		if (cbx_croplist.getSelectedIndex() == 0) //all crop
 			whereclause = whereyear;
@@ -524,7 +551,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		//TBD: should exclude non-seed products eg: U000 Z000...etc
 		
 		String sql = 
-			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, (ts/10000) ts, (actincome/10000) actincome, firstdeal, lastdeal, lskg, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM " 
+			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, (ts/10000) ts, (actincome/10000) actincome, firstdeal, lastdeal, skg, lskg, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM " 
 			+"	(SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/T2.tland) * 100, 2) as perc, prodkg, year as prodyr "
 			+"	FROM  "
 			+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE " + whereclause + " group by pcode order by sland desc, prodkg desc) as T1, "
@@ -545,7 +572,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 			+") as t2 "
 		
 			+"on t1.pcode = t2.pcode "
-			+" where " + wheregp;
+			+" where " + wheregp + " and " + whereskg;
 		
 	
 		System.out.println(sql);
@@ -559,6 +586,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				landuse = rs.getFloat("land");
 				landperc = rs.getFloat("perc");
 				runper = runper + landperc;
+				skg = rs.getFloat("skg");
 				prodkg = rs.getFloat("prodkg");
 				avggp = rs.getFloat("avggp");
 				lskg = rs.getFloat("lskg");
@@ -615,6 +643,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 						new BigDecimal(actincomeper),
 						new BigDecimal(arunper),
 						new BigDecimal(landearn),
+						new BigDecimal(skg),
 						lastdeal, 
 						new BigDecimal(lskg),
 						new BigDecimal(price), 

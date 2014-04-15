@@ -1483,7 +1483,7 @@ public class MainLoad extends JFrame {
 			  //list out the sales record
 			  sql = "Select pcode, pcname, level2, iyear, tsales/soldkg as avgntprice, soldkg, tsales " +
 						" from ( Select *, year(invoice_date) as iyear, sum(total_weight) as soldkg, sum(sales) as tsales "+ 
-						" from (SELECT *, (unit_price * toNTrate) as up, (unit_price * total_weight * toNTrate) as sales "+ 
+						" from (SELECT *, (unit_price * total_pack * toNTrate)/total_weight as up, (unit_price * total_pack * toNTrate) as sales "+ 
 						" from sao430) as t1 group by pcode, iyear) as t2";
 				
 			  stat = con.createStatement();
@@ -1748,7 +1748,7 @@ public class MainLoad extends JFrame {
 	    	  sql = "Select pcode, count(pcode) as deals, min(invoice_date) as firstdeal, "
 	    	  		+ " max(invoice_date) AS lastdeal,"
 	    	  		+ " sum(total_weight) as iqty, "
-	    	  		+ " sum(unit_price * toNTrate * total_weight) as nttotal  "
+	    	  		+ " sum(unit_price * toNTrate * total_pack) as nttotal  "
 	    	  			+ " from (SELECT * FROM sao430 where "
 		    	  		+ " invoice_date > \'"+ year + "' and " 
 		    	  		+ " invoice_date < \'"+ nextyear + "' and " 
