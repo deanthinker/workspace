@@ -195,7 +195,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		panel_8.add(cbx_skg_logic);
 		
 		cbx_skg = new JComboBox<String>();
-		cbx_skg.setModel(new DefaultComboBoxModel(new String[] {"0.5", "1", "1.5", "2", "3", "5", "10", "15", "20", "30", "40", "50", "60", "70", "80", "90", "100", "150", "200", "250", "300", "500", "1000", "2000", "3000", "4000", "5000"}));
+		cbx_skg.setModel(new DefaultComboBoxModel(new String[] {"0", "0.5", "1", "1.5", "2", "3", "5", "10", "15", "20", "30", "40", "50", "60", "70", "80", "90", "100", "150", "200", "250", "300", "500", "1000", "2000", "3000", "4000", "5000"}));
 		cbx_skg.setSelectedIndex(1);
 		panel_8.add(cbx_skg);
 		

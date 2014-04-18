@@ -1158,13 +1158,13 @@ public class KYdb {
 				case DOMESTIC:
 					if (crop == null)
 						sql ="Select pcode, level2, pcname, pename, invoice_date, packtype, packprice, actlqty, total_weight, "
-							+ " format((packprice * actlqty)/total_weight, 0) as Kgprice, format(packprice * actlqty,0) as sales " 
+							+ " format((packprice * actlqty)/total_weight, 0) as ntKGprice, format(packprice * actlqty,0) as sales " 
 							+ " from dom430 where custcode = '"+ custcode + "' and "
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
 							+ " order by sales desc";
 					else
 						sql ="Select pcode, level2, pcname, pename, invoice_date, packtype, packprice, actlqty, total_weight, "
-								+ " format((packprice * actlqty)/total_weight,0) as Kgprice, format(packprice * actlqty,0) as sales " 
+								+ " format((packprice * actlqty)/total_weight,0) as ntKGprice, format(packprice * actlqty,0) as sales " 
 								+ " from dom430 where custcode = '"+ custcode + "' and "
 								+ " level2 = '" + crop + "' and "
 								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
