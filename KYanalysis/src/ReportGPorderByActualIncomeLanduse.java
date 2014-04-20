@@ -400,7 +400,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 			.setPattern("#,##0.0")
 			.setWidth(2);
 		TextColumnBuilder<String>  colmark  = col.column("*", "mark", type.stringType()).setWidth(1);
-		
+		/*
 		TextColumnBuilder<BigDecimal> colsort;
 		
 		if (rad_sortLand.isSelected())
@@ -415,7 +415,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 			colsort = collandearn;
 		else
 			colsort = colavggp;		
-		
+		*/
 		title = "銷售排名毛利分析 ";
 		
 		
@@ -454,7 +454,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 					cmp.text(title).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.LEFT),
 					cmp.text(subtitle).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT)).newRow()
 					  .add(cmp.filler().setStyle(stl.style().setTopBorder(stl.pen2Point())).setFixedHeight(10)))
-			  		.sortBy(desc(colsort))
+			  		//.sortBy(desc(colsort))
 			  .pageFooter(Templates.footerComponent)
 			  .setDataSource(getJRDS_GPsalesParam())
 			  
@@ -518,18 +518,18 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		else
 			whereclause = whereyear + " and " + wherelevel2;
 
-		String orderclause ="";		
+		String orderby ="";		
 		if (rad_sortSales.isSelected())
-			orderclause = " ts";
+			orderby = " ts ";
 		else if (rad_sortSoldkg.isSelected())
-			orderclause = " skg";
+			orderby = " skg ";
 		else if (rad_sortActincome.isSelected())
-			orderclause = " actincome";
+			orderby = " actincome ";
 		else{
 			if (radRecentGP.isSelected())
-				orderclause = " lgp";
+				orderby = " lgp ";
 			else
-				orderclause = " avggp";					
+				orderby = " avggp ";					
 			
 		}
 			
@@ -543,18 +543,23 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		
 		String sql = 
 			"SELECT * FROM ( "
-				+"SELECT v.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, actincome/10000 as actincome, actincome/totalactincome as actper,lastdeal, (ts/skg) as avgntprice, (tc/bkg) as avgntcost, ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, lskg, lprice, lcost, lgp from "
+				+"SELECT t1.pcode, level2, pcname, firstdeal, skg, bkg, ts/10000 as ts, actincome/10000 as actincome, actincome/totalactincome as actper,lastdeal, (ts/skg) as avgntprice, (tc/bkg) as avgntcost, ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, lskg, lprice, lcost, lgp, sland, lper from "
 				+"( "
 				+"	(SELECT pcode, sum(soldkg) as skg, sum(buykg) as bkg, sum(tsales) as ts, sum(tcost) as tc, sum(tsales * (gp/100)) actincome FROM market.integratedgp where " + whereyear + "  group by pcode )as t1, "
 				+"	(SELECT sum(tsales) totalsales, sum(tsales * (gp/100)) totalactincome FROM market.integratedgp where " + whereyear + ") as t2, "
 				+"	(SELECT pcode, max(year) as lastdeal, soldkg as lskg FROM market.integratedgp where soldkg > 0 and " + whereyear + " and year < 2099 group by pcode ) as t3, "
 			    +"  (SELECT pcode, min(year)  as firstdeal FROM market.integratedgp where year < 2099 group by pcode ) as t4, "
 				+"	(SELECT pcode, year, avgntprice as lprice, avgntcost as lcost, gp as lgp from market.integratedgp) as t5, "
-				+"	vege_prod as v  "
-				+") "
-				+"WHERE t1.pcode = v.pcode and t1.pcode = t3.pcode and t1.pcode = t4.pcode and t1.pcode = t5.pcode and t5.year = lastdeal "
+				+"  (SELECT pcode, level2, pcname, sland, Format( (sland/tland) * 100, 2) as lper, prodkg, year as prodyr "
+				+"	FROM "
+				+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE year >= 2009 and year <= 2013 group by pcode order by sland desc, prodkg desc) as TT, "
+				+"		(SELECT sum(landsize) as tland FROM pro130 WHERE year >= 2009 and year <= 2013) as T2 "
+				+"	) as L "
+				+") " 
+				+"WHERE t1.pcode = t3.pcode and t1.pcode = t4.pcode and t1.pcode = t5.pcode and t5.year = lastdeal  and t1.pcode = L.pcode "
 			
-			+") as TA  where " + wheregp + wherelevel2 + " order by " + orderclause + " desc ";
+			+") as TA  where " + wheregp + wherelevel2 
+			+ " order by " + orderby + " desc ";
 		
 
 		System.out.println(sql);
@@ -573,7 +578,8 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				lgp = rs.getFloat("lgp"); //latest GP
 				avggp = rs.getFloat("avggp"); //average GP
 				
-				landuse = db.getPcodePeriod_rangelanduse(pcode, ys, ye);
+				//landuse = db.getPcodePeriod_rangelanduse(pcode, ys, ye);
+				landuse = rs.getFloat("sland");
 				landperc = (landuse / totalLand) * 100;
 				lrunper = lrunper + landperc;
 				

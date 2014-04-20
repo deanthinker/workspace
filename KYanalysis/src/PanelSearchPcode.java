@@ -142,7 +142,11 @@ public abstract class PanelSearchPcode extends JPanel {
 		
 		ActionListener actl = new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				db.fillList_vege_prod_keyword(listVegeProd,txfKeyword.getText());
+				int count = db.fillList_vege_prod_keyword(listVegeProd,txfKeyword.getText());
+				if (count == 1){
+					listVegeProd.setSelectedIndex(0); //select the 1st item automatically
+				}
+					
 			}
 		};
 		

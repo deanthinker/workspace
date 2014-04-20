@@ -421,7 +421,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		TextColumnBuilder<String>  colmark  = col.column("*", "mark", type.stringType()).setWidth(1);
 		
 		TextColumnBuilder<BigDecimal> colsort;
-		
+		/*
 		if (rad_sortLand.isSelected())
 			colsort = collanduse;
 		else if (rad_sortProdkg.isSelected())
@@ -434,7 +434,8 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 			colsort = collandearn;
 		else
 			colsort = colavggp;
-
+		 */
+		
 		title = "生產價值毛利分析 ";
 		
 		
@@ -476,7 +477,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 					cmp.text(title).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.LEFT),
 					cmp.text(subtitle).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT)).newRow()
 					  .add(cmp.filler().setStyle(stl.style().setTopBorder(stl.pen2Point())).setFixedHeight(10)))
-			  .sortBy(desc(colsort))
+			  //.sortBy(desc(colsort))
 			  
 			  .pageFooter(Templates.footerComponent)
 			  .setDataSource(getJRDS_GPlanduseParam())
@@ -523,6 +524,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 
 		String whereclause = "";
 		String whereskg = "";
+		String orderby = " sland ";
 		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
 		String wherelevel2 = "";
 		if (cbx_croplist.getSelectedIndex() >= 1){
@@ -542,6 +544,20 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 			whereclause = whereyear;
 		else
 			whereclause = whereyear + " and " + wherelevel2;
+
+		if (rad_sortLand.isSelected())
+			orderby = " sland ";
+		else if (rad_sortProdkg.isSelected())
+			orderby = " prodkg ";
+		else if (rad_sortActincome.isSelected())
+			orderby = " actincome ";
+		else if (rad_sortSales.isSelected())
+			orderby = " ts ";
+		else if (rad_sortLandearn.isSelected())
+			orderby = " landearn ";
+		else
+			orderby = " sland ";			
+		
 		/*
 		 * only shows the sales record within the year range
 		 * then, extracts the production data of those varieties. 
@@ -551,8 +567,8 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 		//TBD: should exclude non-seed products eg: U000 Z000...etc
 		
 		String sql = 
-			"SELECT t1.pcode, t1.level2, t1.pcname, land, perc, prodkg, (ts/10000) ts, (actincome/10000) actincome, firstdeal, lastdeal, skg, lskg, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM " 
-			+"	(SELECT pcode, level2, pcname, Format(sland,2) as land, Format( (sland/T2.tland) * 100, 2) as perc, prodkg, year as prodyr "
+			"SELECT t1.pcode, t1.level2, t1.pcname, sland, perc, prodkg, (ts/10000) ts, (actincome/10000) actincome, (actincome/sland)/10000 landearn, firstdeal, lastdeal, skg, lskg, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM " 
+			+"	(SELECT pcode, level2, pcname, sland, Format( (sland/T2.tland) * 100, 2) as perc, prodkg, year as prodyr "
 			+"	FROM  "
 			+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE " + whereclause + " group by pcode order by sland desc, prodkg desc) as T1, "
 			+"		(SELECT sum(landsize) as tland FROM pro130 WHERE " + whereclause + ") as T2 "
@@ -572,7 +588,8 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 			+") as t2 "
 		
 			+"on t1.pcode = t2.pcode "
-			+" where " + wheregp + " and " + whereskg;
+			+" where " + wheregp + " and " + whereskg
+			+" order by " + orderby + " desc ";
 		
 	
 		System.out.println(sql);
@@ -583,7 +600,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				pcode = rs.getString("pcode");
 				crop = rs.getString("level2");
 				pcname = rs.getString("pcname");
-				landuse = rs.getFloat("land");
+				landuse = rs.getFloat("sland");
 				landperc = rs.getFloat("perc");
 				runper = runper + landperc;
 				skg = rs.getFloat("skg");
@@ -601,11 +618,8 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 				lastdeal = rs.getString("lastdeal").substring(2,4);
 				avgntprice = rs.getFloat("avgntprice");
 				avgntcost = rs.getFloat("avgntcost");
+				landearn = rs.getFloat("landearn");
 				
-				if (landuse != 0)
-					landearn = actincome / landuse; //larger = better
-				else
-					landearn = 0;
 				//System.out.println("landearn:"+landearn + "   actincomeper:"+actincomeper + "  landperc:"+landperc);
 				
 				if ( YE - rs.getInt("firstdeal") < Integer.valueOf(cbx_newprodyr.getSelectedItem().toString()) )
@@ -632,7 +646,7 @@ public class ReportGPorderByLanduseActualIncome extends JDialog {
 							mark = "";						
 					}
 				}
-									
+				
 				dataSource.add(pcode, newp, crop, pcname, 
 						new BigDecimal(landuse),
 						new BigDecimal(landperc),
