@@ -27,7 +27,7 @@ class MyTableModel extends AbstractTableModel {
 	public void setResultSet(ResultSet rs){
 		ResultSetMetaData rsmd;
 		int colNo=0;
-		Vector<Object> rowvec = new Vector<Object>();
+		Vector<String> rowvec = new Vector<String>();
 		rows.removeAllElements();
 		header.removeAllElements();
 		
@@ -40,9 +40,9 @@ class MyTableModel extends AbstractTableModel {
 			}
 
 			while(rs.next()){
-				rowvec = new Vector<Object>();
+				rowvec = new Vector<String>();
 				for (int i=0;i<colNo;i++){
-					rowvec.add(rs.getObject(i+1));
+					rowvec.add(rs.getString(i+1));
 				}
 				rows.add(rowvec);
 			}
@@ -66,7 +66,7 @@ class MyTableModel extends AbstractTableModel {
 
 	// method that needs to be overload. The object is in the arrayList at rowIndex
 	public String getValueAt(int rowIndex, int columnIndex) {
-		return rows.get(rowIndex).get(columnIndex).toString();
+		return String.valueOf(rows.get(rowIndex).get(columnIndex));
 	}
 	
 	public Vector<String> getRow(int rowIndex) {

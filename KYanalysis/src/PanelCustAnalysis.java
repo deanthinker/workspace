@@ -56,7 +56,7 @@ public class PanelCustAnalysis extends JPanel {
 		panelSearchCust = new PanelSearchCust(DATASRC){ 
 			private static final long serialVersionUID = 1L;
 			public void update() {
-				panelCustInfo.setCustcode(DATASRC,panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all"); 
+				panelCustInfo.setCustcode(DATASRC,panelyr.getYS() ,panelyr.getYE() ,selectedcustcode,null,"all");
 				panelCustSales.setGroupDisabled();
 				panelCustSales.setCustcode(DATASRC,panelyr.getYS(), panelyr.getYE(), selectedcustcode, null, false);
 			}
@@ -87,7 +87,7 @@ public class PanelCustAnalysis extends JPanel {
 		leftsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, lefttop, leftbot);
 		rightsplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, righttop, rightbot);
 
-		rightsplit.setDividerLocation(250);
+		rightsplit.setDividerLocation(350);
 		leftsplit.setDividerLocation(100);
 		
 		leftsplit.add(lefttop, "top"); 

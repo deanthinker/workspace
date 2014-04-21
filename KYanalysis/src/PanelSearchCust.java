@@ -72,8 +72,6 @@ public abstract class PanelSearchCust extends JPanel {
 		JPanel panelTable = new JPanel();
 		this.add(panelFilter);
 		this.add(panelTable);
-
-		
 		
 		chkSort.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
