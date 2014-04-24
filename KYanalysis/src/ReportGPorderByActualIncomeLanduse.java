@@ -490,7 +490,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		String lastdeal = "";
 		String ys = (String)cbxProductionYS.getSelectedItem();
 		String ye = (String)cbxProductionYE.getSelectedItem();
-		float totalLand = db.getPcodePeriod_rangeLanduse("ALL",ys,ye);
+		
 		float rangeActincome = db.getPcodePeriod_rangeActIncomeIntegrated("ALL",ys,ye);
 		System.out.println("rangeActincome:"+rangeActincome);
 		
@@ -498,13 +498,18 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		String crop = "";
 		String pcname = "";
 		String newp = "";
-
+		float totalLand = 0;
 		String whereyear = " year >= "+ys+ " and year <= " + ye+ " "; //production year range
 		
 		String wherelevel2 ="";  
-		if (cbx_croplist.getSelectedIndex()!=0) //the first item does not apply filter
+		if (cbx_croplist.getSelectedIndex()!=0){ //the first item does not apply filter
 			wherelevel2 = " and level2 = '" + (String) cbx_croplist.getSelectedItem() + "'"; //production crop type
-
+			totalLand = db.getPcodePeriod_rangeLanduse("ALL",(String)cbx_croplist.getSelectedItem() ,ys,ye);
+		}
+		else{
+			totalLand = db.getPcodePeriod_rangeLanduse("ALL","ALL" ,ys,ye);
+		}
+		
 		String wheregp = "";
 		if (radRecentGP.isSelected()){
 			wheregp = " lgp " + cbx_gp_logic.getSelectedItem() + " " + cbx_gp_percent.getSelectedItem();
@@ -552,8 +557,8 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 				+"	(SELECT pcode, year, avgntprice as lprice, avgntcost as lcost, gp as lgp from market.integratedgp) as t5, "
 				+"  (SELECT pcode, level2, pcname, sland, Format( (sland/tland) * 100, 2) as lper, prodkg, year as prodyr "
 				+"	FROM "
-				+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE year >= 2009 and year <= 2013 group by pcode order by sland desc, prodkg desc) as TT, "
-				+"		(SELECT sum(landsize) as tland FROM pro130 WHERE year >= 2009 and year <= 2013) as T2 "
+				+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE " + whereyear + " group by pcode order by sland desc, prodkg desc) as TT, "
+				+"		(SELECT sum(landsize) as tland FROM pro130 WHERE " + whereyear + ") as T2 "
 				+"	) as L "
 				+") " 
 				+"WHERE t1.pcode = t3.pcode and t1.pcode = t4.pcode and t1.pcode = t5.pcode and t5.year = lastdeal  and t1.pcode = L.pcode "
@@ -563,6 +568,7 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 		
 
 		System.out.println(sql);
+
 		try {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);

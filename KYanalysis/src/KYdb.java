@@ -194,26 +194,33 @@ public class KYdb {
 		return soldkg;
 	}	
 
-	public float getPcodePeriod_rangeLanduse(String pcode, String ys, String ye){ //期間總用地
+	public float getPcodePeriod_rangeLanduse(String pcode, String level2, String ys, String ye){ //期間總用地
 		Statement stat = null;
 		ResultSet rs = null;
 		float land =0;
 		
 		String sql = "";
 		
-		if (pcode.equalsIgnoreCase("ALL")){
-			sql = "SELECT sum(landsize) as land from pro130 where " 
-					  + " year >= " + ys + " and "
-					  + " year <= " + ye;  
+		if (!pcode.equalsIgnoreCase("ALL")){
+			pcode = " pcode = '" + pcode + "' and ";
+		}else{
+			pcode = "";
 		}
-		else{
-			sql = "SELECT sum(landsize) as land from pro130 where " 
-					  + " pcode = '" + pcode + "' and "
-					  + " year >= " + ys + " and "
-					  + " year <= " + ye  
-					  + " group by pcode ";
+		
+		if (!level2.equalsIgnoreCase("ALL")){
+			level2 = " level2 = '" + level2 + "' and ";
+		}else{
+			level2 = "";
 		}
-		//debug(sql);
+		
+		sql = "SELECT sum(landsize) as land from pro130 where "
+				  + pcode 
+				  + level2
+				  + " year >= " + ys + " and "
+				  + " year <= " + ye;  
+		
+
+		debug(sql);
 
 		try {
 			stat = con.createStatement();
