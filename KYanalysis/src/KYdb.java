@@ -148,7 +148,7 @@ public class KYdb {
 		ResultSet rs = null;
 		float avgntprice =0;
 		String sql = "SELECT * FROM market.vege_cost_price_year where "
-				+ "pcode = '" + pcode + "' "
+				+ " pcode = '" + pcode + "' "
 				+ " order by year desc";
 
 		try {
@@ -173,7 +173,7 @@ public class KYdb {
 		ResultSet rs = null;
 		float soldkg =0;
 		String sql = "SELECT * FROM vege_cost_price_year where "
-				+ "pcode = '" + pcode + "' "
+				+ " pcode = '" + pcode + "' "
 				+ " order by year desc";
 		
 		//debug(sql);
@@ -1149,6 +1149,50 @@ public class KYdb {
 		try {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_sao430 Exception :" + e.toString());
+		}
+		
+		return rs;
+	}	
+
+	public ResultSet getResultset_prodReview(){
+		Statement stat = null;
+		ResultSet rs = null;
+		float avgntcost = 0;
+		String sql =
+				"SELECT t1.pcode, t1.level2, t1.pcname, sland, perc, prodkg, bkg, (bkg/prodkg)*100 ach, std, nstd, (nstd/bkg) nsrate, (ts/10000) ts, (actincome/10000) actincome, (actincome/sland)/10000 landearn, skg, skg/yrange avgskg, (std/(skg/yrange)) stockrate, firstdeal, lastdeal, lskg, avgntprice, avgntcost, avggp, lprice, lcost, lgp FROM 	"
+						+"	(SELECT pcode, level2, pcname, sland, Format( (sland/T2.tland) * 100, 2) as perc, prodkg, year as prodyr "
+						+"	FROM  		"
+						+"		(SELECT *, sum(landsize) as sland, sum(qty) as prodkg FROM market.pro130 WHERE  year >= 2009 and year <= 2013  group by pcode order by sland desc, prodkg desc) as T1, 		"
+						+"		(SELECT sum(landsize) as tland FROM pro130 WHERE  year >= 2009 and year <= 2013 ) as T2 	"
+						+"	) as t1, "
+						+"	(SELECT ta.*, firstdeal, lastdeal, lskg, (ts/skg) avgntprice, (tc/bkg) avgntcost,  ((((ts/skg)-(tc/bkg))/(ts/skg))*100) as avggp, lgp, lprice, lcost 	"
+						+"		FROM 	"
+						+"		(SELECT pcode, year, gp lgp, soldkg lskg, avgntprice lprice, avgntcost lcost FROM integratedgp) as latest, 	"
+						+"		(SELECT pcode, sum(soldkg) skg, sum(buykg) bkg, sum(tsales) ts, sum(tcost) tc, sum(tsales * (gp/100)) actincome FROM integratedgp 		"
+						+"			WHERE  year >= 2009 and year <= 2013 		"
+						+"			GROUP BY pcode 	"
+						+"		) as ta, 	"
+						+"		(SELECT pcode, min(year) as firstdeal, max(year) as lastdeal FROM integratedgp 		"
+						+"			WHERE soldkg > 0 and  year >= 2009 and year <= 2013  and year < 2099 GROUP BY pcode 	"
+						+"		) as tb "
+						+"		WHERE tb.pcode = ta.pcode and tb.pcode = latest.pcode and latest.year = lastdeal "
+						+"	) as t2, "
+						+"	(Select pcode, (srq+saq) std, (nsrq+nsaq) nstd from ( "
+						+"		(Select distinct pcode, level2, pcname, "
+						+"		reserve_std_qty srq, reserve_stdprep_qty srpq, avai_std_qty saq, avai_stdprep_qty sapq, "
+						+"		reserve_nstd_qty nsrq, reserve_nstdprep_qty nsrpq, avai_nstd_qty nsaq, avai_nstdprep_qty nsapq "
+						+"		from inv340) ) as T "
+						+"	) as t3, (Select (2013-2009) yrange) as Y "
+						+"WHERE t1.pcode = t2.pcode and t1.pcode = t3.pcode and lgp <= 100 and  skg >= 0.5 "
+						+"order by  sland  desc ";		
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			
 		}catch (SQLException e) {
 			debug("getResultset_sao430 Exception :" + e.toString());
 		}
@@ -2306,8 +2350,8 @@ public class KYdb {
 
 		
 		String sql = "SELECT *, sumntcost/buykg as avgntcost from ("
-				   + "SELECT pcode, year, sum(total_pay) as sumntcost, sum(intostock_qty) as buykg from ( " 
-				   + "SELECT pcode, level2, total_pay, intostock_qty, year(supply_date) as year "
+				   + "SELECT pcode, year, sum(up * intostock_qty) as sumntcost, sum(intostock_qty) as buykg from ( " 
+				   + "SELECT pcode, level2, up, total_pay, intostock_qty, year(supply_date) as year "
 				   + " FROM market.pro960 where pcode = '" + pcode + "') as t1  " 
 				   + " group by year ) as t2";
 		

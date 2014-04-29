@@ -284,13 +284,13 @@ public class MainLoad extends JFrame {
 		btnCreateAvgCostPriceYear.setBounds(22, 44, 307, 23);
 		contentPane.add(btnCreateAvgCostPriceYear);
 		
-		JButton btnFromproToInsource = new JButton("PRO960 to in out source");
+		JButton btnFromproToInsource = new JButton("(deprecated) PRO960 to in out source");
 		btnFromproToInsource.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				createPRO960toInsourceOutsource();
 			}
 		});
-		btnFromproToInsource.setBounds(22, 178, 307, 23);
+		btnFromproToInsource.setBounds(391, 180, 307, 23);
 		contentPane.add(btnFromproToInsource);
 		
 		JButton btnAll = new JButton("ALL");
@@ -302,14 +302,14 @@ public class MainLoad extends JFrame {
 		btnAll.setBounds(22, 311, 232, 86);
 		contentPane.add(btnAll);
 		
-		JButton btnCreateProInsource = new JButton("Create PRO960 insource cost year");
+		JButton btnCreateProInsource = new JButton("(deprecated) Create PRO960 insource cost year");
 		btnCreateProInsource.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				createPRO960toInsourceCostYear("in");
 				createPRO960toInsourceCostYear("out");
 			}
 		});
-		btnCreateProInsource.setBounds(22, 145, 307, 23);
+		btnCreateProInsource.setBounds(391, 147, 307, 23);
 		contentPane.add(btnCreateProInsource);
 		
 		JButton btnFixGp = new JButton("Fix 0% GP");
@@ -387,6 +387,26 @@ public class MainLoad extends JFrame {
 		});
 		btnNewButton.setBounds(32, 264, 297, 23);
 		contentPane.add(btnNewButton);
+		
+		JButton btnFixPRO960up = new JButton("Fix PRO960 Zero UP");
+		btnFixPRO960up.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				fixUPwithPRO960();
+			}
+		});
+		btnFixPRO960up.setBounds(22, 147, 248, 23);
+		contentPane.add(btnFixPRO960up);
+
+		JButton btnCreate_lv2_prodcost = new JButton("Create level2_prod_cost");
+		btnCreate_lv2_prodcost.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				createTable_level2_prod_cost();
+			}
+		});
+		btnCreate_lv2_prodcost.setBounds(22, 187, 248, 23);
+		contentPane.add(btnCreate_lv2_prodcost);	
+	
+	
 	}
 	
 	class PcodeYear{ 
@@ -974,6 +994,109 @@ public class MainLoad extends JFrame {
 */
 	}
 
+	private float get_level2_prod_cost_max(String level2){
+		Statement stat = null;
+		ResultSet rs = null;
+		
+		float up=0;
+		
+		String sql = "Select T1.level2, T1.year, T1.up from ( "
+				+ "(select * from level2_prod_cost) T1, "
+				+ "(select level2, max(year) yearmax from level2_prod_cost group by level2) T2 "
+				+ ") where T1.level2 = T2.level2 and T1.year = yearmax "
+				+ " and T1.level2 = '" + level2 + "' ";
+		
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while (rs.next()){
+				up = rs.getFloat("up");
+				return up;
+			}
+		} 
+	    catch(SQLException e)   { System.out.println("get_level2_prod_cost_max Exception :" + e.toString());  } 
+	    finally  { Close();  } 			
+		
+		
+		return up;
+	}
+	private float get_level2_prod_cost(String level2, String year){
+		Statement stat = null;
+		ResultSet rs = null;
+		
+		float up=0;
+		
+		String sql = "select * from level2_prod_cost where level2 = '" + level2 + "' and year = '" + year + "' ";
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while (rs.next()){
+				up = rs.getFloat("up");
+				return up;
+			}
+		} 
+	    catch(SQLException e)   { System.out.println("get_level2_prod_cost Exception :" + e.toString());  } 
+	    finally  { Close();  } 			
+		
+		//if code comes to this point, it means up of the level2 & year pair was not found
+		//therefore, we need to get the latest year UP of this level2.
+		
+		up = get_level2_prod_cost_max(level2);
+				
+		return up;
+	}
+	
+	private void fixUPwithPRO960(){ //fix inland production cost
+		//make reference to pro370 (level2_prod_cost) of the same year
+		//the standard JDBC way does not allow us to update data without PK
+		//Therefore, we have to use DETAIL update query to screen rs into a SINGLE record 
+
+		Statement stat = null;
+		Statement up_stat = null;
+		ResultSet rs = null;
+
+		String sql = "";		
+		String level2 = "";
+		String year = "";
+		String suppliercode = "";
+		String supply_sheetnum = "";
+		String pcode = "";
+		String prodnum = "";
+		
+		String update_sql = "";
+		
+		float up = 0;
+		
+		sql = "Select *, year(supply_date) yr from pro960 where up = 0";
+		try {
+				stat = con.createStatement();
+				up_stat = con.createStatement();
+				rs = stat.executeQuery(sql);
+			  
+				while (rs.next()){
+					year = rs.getString("yr");
+					level2 = rs.getString("level2");
+					suppliercode = rs.getString("suppliercode");
+					supply_sheetnum = rs.getString("supply_sheetnum");
+					pcode = rs.getString("pcode");
+					prodnum = rs.getString("prodnum");
+					
+					up = get_level2_prod_cost(level2, year);
+					update_sql = "update pro960 set up = " + up + " where " 
+							+ " suppliercode = '"+suppliercode+"' and "
+							+ " supply_sheetnum = '" + supply_sheetnum +"' and "
+							+ " pcode = " + pcode + " and prodnum = '" + prodnum + "'";
+					
+					debug(update_sql);
+					up_stat.executeUpdate(update_sql);
+					
+				}
+				
+			} 
+		    catch(SQLException e)   { System.out.println("Update pro960 Exception :" + e.toString());  } 
+		    finally  { Close();  } 			
+		debug("complete fix pro960 ZERO UP!");
+	}
 	
 	private void fixGPwithPRO960(){ //TBD
 		//vege_cost_price_year only records imports and do not take "inland outsource" into consideration
@@ -1119,6 +1242,9 @@ public class MainLoad extends JFrame {
 		//createPRO960toInsourceOutsource();
 		//createPRO960toInsourceCostYear("in");
 		//createPRO960toInsourceCostYear("out");
+		
+		createTable_level2_prod_cost();
+		fixUPwithPRO960(); // fix ZERO Unit_Price (inland production) with cost from level2_prod_cost( from pro370)
 		createTable_vege_cost_price_yearPRO960outNEW();
 		fixGP(); //use previous cost if cost does not exit
 		fixGPwithPRO960();
@@ -1795,6 +1921,45 @@ public class MainLoad extends JFrame {
 			  
 		  }  catch(SQLException e) { debug("CreateDB Exception :" + e.toString());  } 
 		  
+		
+	}	
+
+	public void createTable_level2_prod_cost(){
+		ResultSet rs = null;
+		int sy = Integer.parseInt(tf_startyear.getText());
+		int ey = Integer.parseInt(tf_endyear.getText());
+		int year = sy;
+		int nextyear = sy+1;
+		
+		String sql = "";
+		
+		if (isTableExisting("level2_prod_cost"))
+			dropTable("level2_prod_cost");      
+	    
+		try {
+		  stat = con.createStatement();
+
+		  
+		  sql = "CREATE TABLE `level2_prod_cost` ( "
+				+"  `level2` varchar(20) DEFAULT NULL, "
+				+"  `year` varchar(6) DEFAULT NULL, "
+				+"  `up` decimal(15,3) DEFAULT NULL "
+				+") ENGINE=InnoDB DEFAULT CHARSET=utf8; ";
+		  
+ 	  
+	      stat.executeUpdate(sql);
+	      debug("table created");
+		
+	      sql = "INSERT into level2_prod_cost (level2, year, up) "
+	    		  +"SELECT level2, yr, avg(up) avgprice from  "
+	    		  +"(Select *, year(invoice_date) yr, (unit_price * rate) up from pro370 where unit_price > 0) as T1 "
+	    		  +"Group by level2, yr	";
+
+	      stat.executeUpdate(sql);
+	      debug("data inserted");
+		} 
+	    catch(SQLException e)   { System.out.println("CreateDB Exception :" + e.toString());  } 
+	    finally  { Close();  } 	
 		
 	}	
 	
