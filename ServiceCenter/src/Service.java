@@ -1,13 +1,9 @@
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Point;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.TableRowSorter;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -15,16 +11,12 @@ import javax.swing.JTextField;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JButton;
-import javax.swing.RowSorter;
-
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,12 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
-
 import javax.swing.ListSelectionModel;
 import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.DefaultComboBoxModel;
 import java.awt.Color;
 import javax.swing.SwingConstants;
 
@@ -50,7 +38,7 @@ public class Service extends JFrame {
 	private int mode = VIEW;
 	final JFrame thisframe = this;
 	static private Connection con;
-	JComboBox cbxType;
+	JComboBox<String> cbxType;
 	private JPanel contentPane;
 	private JTable table;
 	private JTextField txfType;
@@ -62,7 +50,7 @@ public class Service extends JFrame {
 	private JTextField txfMobile;
 	private JTextField txfStat;
 	private JLabel label_6;
-	private JComboBox cbxStat;
+	private JComboBox<String> cbxStat;
 	private JLabel label_7;
 	private JTextField txfFm1;
 	private JTextField txfFm2;
@@ -76,7 +64,7 @@ public class Service extends JFrame {
 	private JButton btnDel;
 	private JLabel label_9;
 	private JTextField txfSearch;
-	private JComboBox cbxSearch;
+	private JComboBox<String> cbxSearch;
 	private JLabel lblNewLabel_1;
 	private JLabel lblTotal;
 	private JLabel label_11;
@@ -644,7 +632,7 @@ public class Service extends JFrame {
 				+ "'" + txfPlp.getText() + "')";
 		}
 		else{
-			sql = "UPDATE service.main SET "
+			sql = "UPDATE Service.main SET "
 					+ "name='" + txfName.getText() + "',"
 					+ "htel1='" + txfTel1.getText() + "',"
 					+ "htel2='" + txfTel2.getText() + "',"
@@ -817,7 +805,7 @@ public class Service extends JFrame {
 	
 	private void deleteRecord(String id){
 		Statement stat = null;
-		String sql = "DELETE FROM service.main where id = " + id;
+		String sql = "DELETE FROM Service.main where id = " + id;
 		
 		debug(sql);
 
@@ -836,7 +824,7 @@ public class Service extends JFrame {
 		ResultSet rs = null;
 		int count = 0;
 		if (sql == null || sql == "")
-			sql = "SELECT * from service.main";  
+			sql = "SELECT * from Service.main";  
 		
 		debug(sql);
 
@@ -858,7 +846,7 @@ public class Service extends JFrame {
 		ArrayList<String> gl = new ArrayList<String>();
 		String sql = "";
 
-		sql = "SELECT distinct type from service.main";  
+		sql = "SELECT distinct type from Service.main";  
 		
 		debug(sql);
 
@@ -884,7 +872,7 @@ public class Service extends JFrame {
 		ArrayList<String> list = new ArrayList<String>();
 		String sql = "";
 
-		sql = "SELECT distinct stat from service.main";  
+		sql = "SELECT distinct stat from Service.main";  
 		
 		debug(sql);
 
@@ -908,10 +896,10 @@ public class Service extends JFrame {
 	private Connection getMysqlCon() {
 
 		String driver = "com.mysql.jdbc.Driver";
-		String serverip = "localhost";
-		String dbTable = "service";
-		String username = "root";
-		String password = "1234";
+		String serverip = "23.229.154.169:3306";
+		String dbTable = "Service";
+		String username = "happy";
+		String password = "Ab1234";
 		Connection connection = null;
 
 		String connURL = "jdbc:mysql://" + serverip + "/" + dbTable
