@@ -488,7 +488,7 @@ public class Service extends JFrame {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                if (!table.isVisible()) {
+                if (!table.isVisible() || mode == ADD) {
                     return;
                 }
 
@@ -624,7 +624,7 @@ public class Service extends JFrame {
         btnCancel.setEnabled(true);
         btnAdd.setEnabled(false);
         btnDel.setEnabled(false);
-        table.setVisible(false);
+        table.setVisible(true);
         txfSearch.setEnabled(false);
         cbxSearch.setEnabled(false);
         cleanFields();
@@ -833,6 +833,7 @@ public class Service extends JFrame {
             rs = stat.executeQuery(sql);
 
             model = new MyTableModel(rs);
+            debug("rs count:"+model.getCount());
             
         } catch (SQLException e) {
             debug("searchDB Exception :" + e.toString());
@@ -877,6 +878,13 @@ public class Service extends JFrame {
         String dbTable = "Service";
         String username = "happy";
         String password = "Ab1234";
+        /*
+        String serverip = "localhost:3306";
+        String username = "root";
+        String password = "1234";
+        String dbTable = "service";
+         */
+        
         Connection connection = null;
 
         String connURL = "jdbc:mysql://" + serverip + "/" + dbTable
