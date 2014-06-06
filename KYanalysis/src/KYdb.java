@@ -2032,7 +2032,7 @@ public class KYdb {
 		int idx = -1;
 		boolean show = true;
 		String sql = "";
-		sql = "SELECT pcode, level2, pcname, tyear, dest_country, "
+		sql = "SELECT pcode, level2, pcname, tyear, cust_country, dest_country, "
 				+ "sum(total_weight) as sweight, sum(NTtotal) as sNTtotal, sum(UStotal) as sUStotal "
 				+ "FROM (SELECT *, "
 					+ "year(invoice_date) as tyear, "
@@ -2049,6 +2049,14 @@ public class KYdb {
 			
 			while (rs.next()) {
 				country = rs.getString("dest_country");
+				if (country == null){
+					country = rs.getString("cust_country");
+					if (country.contains("BANG")){//fix dest_country NULL data bug
+						country = "BANGLADESH";
+						show = true;
+					}
+				}
+				
 				tmp = country.toUpperCase();
 				if (tmp.contains("ST."))
 					tmp.replace("S.T", "SAINT. ");
