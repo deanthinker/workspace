@@ -2188,7 +2188,36 @@ public class KYdb {
 		
 		return weight;			
 	}
-	
+	public String getCustmerName(int dbsrc, String custcode){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		String name = "";
+
+		if (dbsrc == EXPORT)
+			sql = "SELECT name FROM market.sao150 where custcode like '"+ custcode+ "'";
+		else{ //DOMESTIC
+			sql = "SELECT name FROM market.dom130 where custcode like '"+ custcode+ "'";
+		}
+		debug(sql);
+		
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				name = rs.getString("name");
+			}
+
+			rs.close();
+			stat.close();
+
+		} catch (SQLException e) {
+			u.debug("Select getCustmerName Exception :"
+					+ e.toString());
+		}
+		
+		return name;		
+	}
 	public float get_domestic_pcode_year_sales(String pcode, String year){
 		Statement stat = null;
 		ResultSet rs = null;

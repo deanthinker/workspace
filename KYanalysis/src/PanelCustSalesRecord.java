@@ -1,10 +1,23 @@
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -17,6 +30,18 @@ import javax.swing.RowSorter;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
+import javax.swing.JButton;
+
+import net.sf.dynamicreports.examples.Templates;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.dynamicreports.report.builder.style.StyleBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
+import net.sf.dynamicreports.report.constant.VerticalAlignment;
+import net.sf.dynamicreports.report.datasource.DRDataSource;
+import net.sf.dynamicreports.report.exception.DRException;
+import net.sf.jasperreports.engine.JRDataSource;
 
 
 public abstract class PanelCustSalesRecord extends JPanel {
@@ -34,30 +59,8 @@ public abstract class PanelCustSalesRecord extends JPanel {
 	private final int DOMESTIC = 2;
 	private int DATASRC = EXPORT;
 	final JCheckBox chkGroup;
-	
-	public static void main(String[] args) {
 
-		try {
-			JFrame frame = new JFrame();
-			PanelCustSalesRecord pcustsales = new PanelCustSalesRecord(){
-				public void update(){
-					
-				}
-			};
-					
-			
-			frame.getContentPane().add(pcustsales);
-			frame.setVisible(true);
-			frame.setSize(700, 500);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			
-			pcustsales.setCustcode(1,"2013","2013","K Y V", "西瓜", false); //EXPORT
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
+	private Connection con = db.getConnection();;
 	
 	private void group(boolean group){
 		setCustcode(DATASRC, ys, ye, custcode, crop, group);
@@ -118,6 +121,14 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		tablepane.add(scrollPane);
 		
 		this.add(titlepane, BorderLayout.NORTH);
+		
+		JButton btnPricelistExport = new JButton("Price List");
+		btnPricelistExport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				build_PriceListParam();
+			}
+		});
+		titlepane.add(btnPricelistExport);
 		this.add(tablepane, BorderLayout.CENTER);
 	}
 	public void setGroupDisabled(){
@@ -150,5 +161,122 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		
 	}
 	*/
+	private void build_PriceListParam() {
+		String subtitle = "";
+		String title = "";
+		
+		StyleBuilder boldStyle         = stl.style().bold();
+		StyleBuilder boldCenteredStyle = stl.style(boldStyle).setHorizontalAlignment(HorizontalAlignment.CENTER);
+		stl.style(boldStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT);
+		StyleBuilder titleStyle = stl.style(boldCenteredStyle)
+								.setVerticalAlignment(VerticalAlignment.MIDDLE)
+								.setFontSize(14);
+
+		StyleBuilder columnTitleStyle  = stl.style(boldCenteredStyle)
+										.setBorder(stl.pen1Point())
+                                        .setBackgroundColor(Color.LIGHT_GRAY);
+
+		TextColumnBuilder<String>  colcustcode  = col.column("客戶編號", "custcode", type.stringType()).setWidth(2);
+		TextColumnBuilder<String>  coldest_country  = col.column("地區", "dest_country", type.stringType()).setWidth(3);
+		TextColumnBuilder<String>  colinvoice_date  = col.column("訂單日", "invoice_date", type.stringType()).setWidth(3);
+		TextColumnBuilder<String>  colpcode  = col.column("品編", "pcode", type.stringType()).setWidth(2);
+		TextColumnBuilder<String>  collevel2  = col.column("作物", "level2", type.stringType()).setWidth(2);
+		TextColumnBuilder<String>  colpcname  = col.column("中文品名", "pcname", type.stringType()).setWidth(3);
+		TextColumnBuilder<String>  colpename  = col.column("英文品名", "pename", type.stringType()).setWidth(4);
+		TextColumnBuilder<String>  coltrade_term  = col.column("條件", "trade_term", type.stringType()).setWidth(1);
+		TextColumnBuilder<BigDecimal>  colup  = col.column("單價", "up", type.bigDecimalType())
+			.setPattern("#,##0.0")
+			.setWidth(2);
+		TextColumnBuilder<String>  colpack_size  = col.column("包裝尺寸", "pack_size", type.stringType()).setWidth(2);
+		TextColumnBuilder<BigDecimal>  coltotal_pack  = col.column("數量", "total_pack", type.bigDecimalType())
+				.setPattern("#,##0.0")
+				.setWidth(2);
+		TextColumnBuilder<String>  colpack_type  = col.column("包裝類型", "pack_type", type.stringType()).setWidth(2);
+
+		title = "Price List: " + custcode + "(" + db.getCustmerName(DATASRC, custcode) + ")";
+		
+		subtitle = "銷售統計期間:" + ys +  " - " + ye;		
+		
+		//ColumnGroupBuilder itemGroup = grp.group(collevel2);
+		//itemGroup.setPrintSubtotalsWhenExpression(exp.printWhenGroupHasMoreThanOneRow(itemGroup));		
+		
+		try {
+			report()
+				.setColumnTitleStyle(columnTitleStyle)
+			  //.setTemplate(Templates.reportTemplate)
+				.setPageFormat(PageType.A4, PageOrientation.LANDSCAPE)
+			  .columns(colcustcode, coldest_country, colinvoice_date, colpcode, collevel2, colpename, colpcname, coltrade_term, colup, colpack_size, coltotal_pack, colpack_type )
+			  .title(cmp.horizontalList()
+					.add(
+					cmp.text(title).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.LEFT),
+					cmp.text(subtitle).setStyle(titleStyle).setHorizontalAlignment(HorizontalAlignment.RIGHT)).newRow()
+					  .add(cmp.filler().setStyle(stl.style().setTopBorder(stl.pen2Point())).setFixedHeight(10)))
+			  		//.sortBy(desc(colsort))
+			  .pageFooter(Templates.footerComponent)
+			  .setDataSource(getJRDS_PriceList())
+			  .ignorePagination() //good for exporting to EXCEL
+			  .show(false);
+			
+		} catch (DRException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private JRDataSource getJRDS_PriceList() {
+		Statement stat = null;
+		ResultSet rs = null;
+		DRDataSource dataSource = new DRDataSource("custcode", "dest_country", "invoice_date", "pcode", "level2", "pename", "pcname", "trade_term", "up", "pack_size", "total_pack", "pack_type" );
+		String sql = "";
+		if (DATASRC == EXPORT){
+			sql = "select custcode, cust_name, " + 
+					"LTRIM(substring(dest_country, LOCATE(',', dest_country)+1)) dest_country," +
+					"invoice_date, pcode, level2, " +
+					"LTRIM(substring(pename, LOCATE(',', pename)+1)) pename," +
+					"pcname, trade_term,  (unit_price * toUSrate) up, pack_size, total_pack, pack_type " +
+					"from market.sao430 where custcode like '" + custcode +"' and " +
+					"year(invoice_date) >= " + ys + " and " +
+					"year(invoice_date) >= " + ys + " and " +
+					"sample = 'N' and class = '標準品' and unit_price > 0 " +
+					"group by pcode, year(invoice_date), unit_price, pack_type " +
+					"order by level2, pename, year(invoice_date) desc limit 9999";
+		}
+		else { //(DATASRC == DOMESTIC)
+			sql = 
+					"select a.custcode, b.name cust_name, region1 dest_country, invoice_date, pcode, level2, "+
+					"LTRIM(substring(pename, LOCATE(',', pename)+1)) pename, pcname, '' trade_term,  (packprice) up, "+ 
+					"packtype pack_size, actlqty total_pack, ' ' pack_type "+ 
+					"from market.dom430 as a, market.dom130 as b "+
+					"where a.custcode = b.custcode and " +
+					"a.custcode like '" + custcode +"' and "+ 
+					"year(invoice_date) >= " + ys + " and " +
+					"year(invoice_date) <= " + ye + " and " +
+					"sample = 'N' and class = '標準品' and packprice > 0 "+
+					"group by pcode, year(invoice_date), packprice, packtype "+
+					"order by level2, pename, year(invoice_date) desc limit 9999";
+		}
+		
+		System.out.println(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while (rs.next()) {	 //loop throught all pcodes
+				
+				dataSource.add(
+						rs.getString("custcode"), rs.getString("dest_country"), 
+						rs.getString("invoice_date"), rs.getString("pcode"), rs.getString("level2"), 
+						rs.getString("pename"), rs.getString("pcname"), rs.getString("trade_term"), 
+						new BigDecimal(rs.getString("up")), rs.getString("pack_size"), new BigDecimal(rs.getString("total_pack")), 
+						rs.getString("pack_type")	);
+			}
+			rs.close();
+			stat.close();
+			
+		} catch (SQLException e) {
+			u.debug("getJRDS_PriceList Exception :" + e.toString());
+		}
+		
+		return dataSource;
+	}	
 	public abstract void update();
 }

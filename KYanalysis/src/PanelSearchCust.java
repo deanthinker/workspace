@@ -170,7 +170,7 @@ public abstract class PanelSearchCust extends JPanel {
 					final int row = target.getSelectedRow();
 					//final int column = target.getSelectedColumn();
 					final int column = 0; //custcode
-					selectedcustcode = (String)target.getValueAt(row, column);
+					selectedcustcode = ((String)target.getValueAt(row, column)).trim();
 					//------------IMPORTANT----------------
 					update(); //need to be implemented!!!!!
 					//-------------------------------------

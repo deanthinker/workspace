@@ -7,6 +7,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -37,6 +39,7 @@ import net.sf.dynamicreports.report.constant.VerticalAlignment;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 
 import javax.swing.JLabel;
 
@@ -457,8 +460,8 @@ public class ReportGPorderByActualIncomeLanduse extends JDialog {
 			  		//.sortBy(desc(colsort))
 			  .pageFooter(Templates.footerComponent)
 			  .setDataSource(getJRDS_GPsalesParam())
-			  
 			  .show(false);
+			u.debug("ttttt");
 			
 		} catch (DRException e) {
 			e.printStackTrace();

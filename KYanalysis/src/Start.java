@@ -172,7 +172,7 @@ public class Start {
 		Thread t = new Thread(){
 		    public void run() { // override Thread's run()
 		  	  // this is for Tab 銷售版圖 SWTNativeInterface
-		    	NativeInterface.open();
+		    	//NativeInterface.open();
 		  	  
 		      //UIUtils.setPreferredLookAndFeel();
 		      System.out.println("NativeInterface loading done.");
@@ -842,7 +842,7 @@ public class Start {
 		tabbedPane.addTab("統計排名", null, makeStatisticsTabPanel(), null);
 		
 		//disable this tab to make run faster
-		tabbedPane.addTab("銷售版圖", null, new PanelBrowser(), null);
+		//tabbedPane.addTab("銷售版圖", null, new PanelBrowser(), null);
 		
 		//tabbedPane.addTab("----", null, new PanelInventory(), null);
 
