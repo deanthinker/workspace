@@ -52,6 +52,7 @@ public abstract class PanelCustInfo extends JPanel {
 	private MyTableModel model = null;
 	//private MyTableModel model = new MyTableModel(db.getResultset_CustSales("2013","2013","AE",null,"all"));
 	private JLabel lbltitle = new JLabel();
+	private JLabel lblcust = new JLabel();
 	private JLabel lblname = new JLabel();
 	private JLabel lblcountry = new JLabel();
 	private JLabel lblregion = new JLabel();
@@ -228,8 +229,9 @@ public abstract class PanelCustInfo extends JPanel {
 	private JComponent compSalesCropTable(){
 		
 		JPanel tablepane = new JPanel(new BorderLayout());
-		JPanel titlepane = new JPanel(new GridLayout(5,1,0,0));
+		JPanel titlepane = new JPanel(new GridLayout(6,1,0,0));
 		titlepane.add(lbltitle);
+		titlepane.add(lblcust);
 		titlepane.add(lblname);
 		titlepane.add(lblcountry);
 		titlepane.add(lblregion);
@@ -313,8 +315,9 @@ public abstract class PanelCustInfo extends JPanel {
 		
 		percent = u.f1decimal(tmpcs/tmpts * 100);
 		
-		lbltitle.setText("客戶代號:" + custcode + "    統計期間:"+ys+"~"+ye);
-		lblsales.setText("銷售NT$"+  tmpcs+"萬 \t(佔營收"+ percent+ "%)");
+		lbltitle.setText("KY總營收:NT$" + tmpts + "萬    統計期間:"+ys+"~"+ye);
+		lblcust.setText("客戶代號:" + custcode  );
+		lblsales.setText("銷售NT$"+  tmpcs+"萬    (佔總營收"+ percent+ "%)");
 		db.setCustInfoLabel(DATASRC,custcode, lblcountry, lblregion, lblname);
 		refreshCustSalesChart();
 	}

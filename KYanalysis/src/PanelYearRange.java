@@ -21,7 +21,8 @@ public class PanelYearRange extends JPanel {
 		lblyrange = new JLabel(title);
 		cbxYS = new JComboBox<String>(create10yearVector());
 		cbxYE = new JComboBox<String>(create10yearVector());
-
+		cbxYS.setSelectedIndex(4); //default 5 year range
+		
 		cbxYS.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Vector<String> tv = new Vector<String>();

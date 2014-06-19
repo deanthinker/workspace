@@ -212,7 +212,7 @@ public abstract class PanelSearchPcode extends JPanel {
 				} 
 				else {
 					title = theList.getSelectedValue().toString();
-					selectedpcode = u.getPcodeFromListItem(title);
+					selectedpcode = u.getPcodeFromListItem(title).trim();
 					
 					if (IMAGEMODE == SHOWIMAGE) lblimg.setIcon(db.getImage_by_pcode(selectedpcode));
 					//------------IMPORTANT----------------

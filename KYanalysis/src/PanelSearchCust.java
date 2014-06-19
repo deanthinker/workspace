@@ -105,10 +105,11 @@ public abstract class PanelSearchCust extends JPanel {
 	public void setPcode(String pcode){
 		selectedpcode = pcode;
 		title = "以下為品種"+pcode+"的客戶清單";
+		chkSort.setSelected(true);
 		lbltitle.setText(title);
 		updateList();
 	}
-	
+
 	private void updateList(){
 		if (chkSort.isSelected()){
 				cbxSort.setEnabled(true);
@@ -197,8 +198,8 @@ public abstract class PanelSearchCust extends JPanel {
 		ActionListener actl = new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String k = txfKeyword.getText();
-				String filter = "custcode like '%" + k + "%' or cust_name like '%" + k + "%' and ";
-				
+				//String filter = "custcode like '%" + k + "%' or cust_name like '%" + k + "%' and ";
+				String filter = "custcode ='" + k + "' and ";
 				model = null; System.gc(); //free the memory
 				//model = new MyTableModel(db.getResultset_customer_all(filter));
 				model = new MyTableModel(db.getResultset_customer_pcode(DATASRC,selectedpcode,panelyr.getYS(), panelyr.getYE(), filter, "tweight"));

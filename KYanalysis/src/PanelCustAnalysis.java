@@ -66,6 +66,7 @@ public class PanelCustAnalysis extends JPanel {
 			private static final long serialVersionUID = 1L;
 			public void update() {
 				panelSearchCust.setPcode(selectedpcode);
+				System.out.println("set pcode here!!!!!!!");
 			}
 		};	
 		
