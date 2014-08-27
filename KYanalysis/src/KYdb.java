@@ -1258,16 +1258,33 @@ public class KYdb {
 		String sql = "";
 		
 		if (group == false){
-				switch (dbsrc){
+				switch (dbsrc){	
 				case EXPORT:
-					if (crop == null)
+					if (crop == null){
+						/*
 						sql ="Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
 							+ " format((unit_price * total_pack * toUSrate)/total_weight,2) as usKGprice, "
 							+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format(unit_price * toNTrate * total_pack,0) as ntSales " 
 							+ " from sao430 where custcode = '"+ custcode + "' and "
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
 							+ " order by ntSales desc";
-					else
+						*/
+						//含三角
+						sql = "Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+							+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, " 
+							+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format((unit_price * toNTrate * total_pack)/10000,0) as '銷售額NT萬' " 
+							+ " from sao430 where custcode = '"+ custcode + "' and " 
+							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
+							+ " union all " 
+							+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+							+ " format((up * usrate),0) usKGprice, "
+							+ " format((up * twrate),0) ntKGprice, format((up * twrate * weight)/10000,0) '銷售額NT萬' " 
+							+ " from (select *, target custcode from sao950) as t9 "
+							+ " where inexp = 'E' and custcode = '"+ custcode + "' and "
+							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+					}
+					else{
+						/*
 						sql ="Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
 								+ " format((unit_price * total_pack * toUSrate)/total_weight,2) as usKGprice, "
 								+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format(unit_price * toNTrate * total_pack,0) as ntSales " 
@@ -1275,6 +1292,23 @@ public class KYdb {
 								+ " level2 = '" + crop + "' and "
 								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
 								+ " order by ntSales desc";
+						*/
+						//含三角
+						sql = "Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+								+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, " 
+								+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format((unit_price * toNTrate * total_pack)/10000,0) as '銷售額NT萬' " 
+								+ " from sao430 where custcode = '"+ custcode + "' and " 
+								+ " level2 = '" + crop + "' and "
+								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
+								+ " union all " 
+								+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+								+ " format((up * usrate),0) usKGprice, "
+								+ " format((up * twrate),0) ntKGprice, format((up * twrate * weight)/10000,0) '銷售額NT萬' " 
+								+ " from (select *, target custcode from sao950) as t9 "
+								+ " where inexp = 'E' and custcode = '"+ custcode + "' and "
+								+ " level2 = '" + crop + "' and "
+								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye;
+					}
 					break;
 				case DOMESTIC:
 					if (crop == null)
@@ -1296,21 +1330,50 @@ public class KYdb {
 		else{ //if GROUPING
 			switch (dbsrc){
 			case EXPORT:
-				if (crop == null)
+				if (crop == null){
+					/*
 					sql = "SELECT *, format(ntSales,0) ntSales, format(soldKg,1) soldKg, format(ntSales/soldKg,0) as KgPrice from ( "
 							+" SELECT pcode, level2, pcname, pename, sum(unit_price*toNTrate*total_pack) as ntSales, sum(total_weight) as soldKg "
 							+ " from sao430 where custcode = '"+ custcode + "' and "
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
 							+ " group by pcode "
 							+ " order by ntSales desc ) as t1 ";
+					 */
+					//含三角
+					sql = "Select pcode, level2, pcname, pename, format(sum(ntSales)/10000,0) '銷售額NT萬', format(sum(total_weight),0) soldKg, format(sum(ntSales)/sum(total_weight),0) NT公斤價 "
+						+ " from( "
+						+ " Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+						+ " (unit_price * total_pack * toUSrate)/total_weight as usKGprice,  "
+						+ " (unit_price * total_pack * toNTrate)/total_weight as ntKGprice, unit_price * toNTrate * total_pack as ntSales " 
+						+ " from sao430 where custcode = '"+ custcode + "' and  "
+						+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
+						+ " union all "
+						+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+						+ " (up * usrate) usKGprice,  "
+						+ " (up * twrate) ntKGprice, (up * twrate * weight) ntSales  " 
+						+ " from (select *, target custcode from sao950) as t9  "
+						+ " where inexp = 'E' and  "
+						+ " custcode = 'KYI' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
+						+ " ) as tsum group by pcode order by ntSales desc";
+				}
 				else
-					sql = "SELECT *, format(ntSales,0) ntSales, format(soldKg,1) soldKg, format((ntSales/soldKg),0) as KgPrice from ( "
-							+" SELECT pcode, level2, pcname, pename, sum(unit_price*toNTrate*total_pack) as ntSales, sum(total_weight) as soldKg "
-							+ " from sao430 where custcode = '"+ custcode + "' and "
+					sql = "Select pcode, level2, pcname, pename, format(sum(ntSales)/10000,0) '銷售額NT萬', format(sum(total_weight),0) soldKg, format(sum(ntSales)/sum(total_weight),0) ntKGprice "
+							+ " from( "
+							+ " Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+							+ " (unit_price * total_pack * toUSrate)/total_weight as usKGprice,  "
+							+ " (unit_price * total_pack * toNTrate)/total_weight as ntKGprice, unit_price * toNTrate * total_pack as ntSales " 
+							+ " from sao430 where custcode = '"+ custcode + "' and  "
 							+ " level2 = '" + crop + "' and "
-							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye
-							+ " group by pcode "
-							+ " order by ntSales desc ) as t1 ";
+							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
+							+ " union all "
+							+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+							+ " (up * usrate) usKGprice,  "
+							+ " (up * twrate) ntKGprice, (up * twrate * weight) ntSales  " 
+							+ " from (select *, target custcode from sao950) as t9  "
+							+ " where inexp = 'E' and  "
+							+ " level2 = '" + crop + "' and "
+							+ " custcode = 'KYI' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
+							+ " ) as tsum group by pcode order by ntSales desc";
 				
 
 				break;
@@ -1390,12 +1453,30 @@ public class KYdb {
 		switch (dbsrc){
 		case EXPORT:
 			//return a list of variety sales
+			/*
 			sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as 'sales' from " 
 					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
 					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
 					+" where custcode = '" + custcode + "' and level2 = '" + crop + "' and "
 					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
 					+ " group by pcode ) as t2 order by tsales desc";
+			*/
+			//含三角
+			sql =   "SELECT pcode, level2, pcname, format(soldkg,0), format(tsales/10000,0) sales from ( " 
+					+" SELECT *, sum(total_weight) soldkg, sum(ntSales) tsales from ( "
+					+" Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+					+" ((unit_price * total_pack * toUSrate)/total_weight) as usKGprice,  "
+					+" ((unit_price * total_pack * toNTrate)/total_weight) as ntKGprice, (unit_price * toNTrate * total_pack) as ntSales " 
+					+" from sao430 where custcode = '" + custcode + "' and level2 = '" + crop + "' and  "
+					+" year(invoice_date) >= "+ys+" and year(invoice_date)<= "+ye+"  "
+					+" union all "
+					+" Select pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+					+" (up * usrate) usKGprice,  "
+					+" (up * twrate) ntKGprice, (up * twrate * weight) ntSales " 
+					+" from (select *, target custcode from sao950) as t9 "
+					+" where inexp = 'E' and level2 = '" + crop + "' and  "
+					+" custcode = '" + custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+ " " 
+					+" ) as tx group by pcode ) as TX order by tsales";
 			break;
 		case DOMESTIC:
 			//return a list of variety sales
@@ -1419,7 +1500,6 @@ public class KYdb {
 		
 		return rs;	
 	}
-	
 	
 	public ResultSet getResultset_CustSales(int dbsrc, String ys, String ye, String custcode, String pcode, String crop){
 		//ys and ye are mandatory
@@ -1478,12 +1558,25 @@ public class KYdb {
 		
 		switch (dbsrc){
 		case EXPORT:
+			/*
 			sql = "SELECT "+ select + " format(tweight,1) as '銷售重(Kg)', format(tsales/10000,1) as '銷售額(萬)', round((tsales/"+custSales +")*100) as '銷售佔比%' from " 
 					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
 					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
 					+" where " + pcodefilter + cropfilter + custcodefilter
 					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
 					+ groupby + " ) as t2 order by tsales desc";
+			*/
+			//Add Tri-Trade
+			sql = "SELECT " + select + " format(tweight,1) as '銷售重(Kg)', format(tsales/10000,1) as '銷售額(萬)', round((tsales/"+custSales +")*100) as '銷售佔比%' from " 
+					   +" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+					   +" (SELECT custcode,pcode, level2, total_weight, year(invoice_date) year, (unit_price * toNTrate * total_pack) as total from sao430 "
+					   +" where " + pcodefilter + cropfilter + custcodefilter
+					   +" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye
+					   +"	UNION ALL "
+					   +"	SELECT target as custcode, pcode, level2, weight as total_weight, year(invoice_date) year, (up * weight * twrate) total from (select *, target as custcode from sao950) as t9 "
+					   +" where " + pcodefilter + cropfilter + custcodefilter
+					   +" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye +" and inexp='E' ) as t1 "  
+					   + groupby + " ) as t2 order by tsales desc";			
 			break;
 		case DOMESTIC:
 			sql = "SELECT "+ select + " format(tweight,1) as '銷售重(Kg)', format(tsales/10000,1) as '銷售額(萬)', round((tsales/"+custSales +")*100) as '銷售佔比%' from " 
