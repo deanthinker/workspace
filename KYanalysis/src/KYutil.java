@@ -4,6 +4,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.text.NumberFormat;
 
 public class KYutil {
@@ -16,6 +18,14 @@ public class KYutil {
 		
 		return pcode;
 	}
+	
+
+	public boolean isNumber(String input) {
+		final Pattern NUMBER_PATTERN = Pattern.compile("[+-]?\\d*\\.?\\d+");
+	    Matcher m = NUMBER_PATTERN.matcher(input);
+	    return m.matches();
+	}
+	
 	public boolean logicCompare(String logic, float v1, float v2){
 		switch (logic){
 		case ">=":

@@ -31,9 +31,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 public class PanelEXPForecast extends JPanel {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private static final int EXPSOLDKG = 0;
 	private static final int PRODUCTION = 1;
@@ -54,7 +51,6 @@ public class PanelEXPForecast extends JPanel {
 			final XYDataset tdataset = getJFCdataset_forecast();
 			final JFreeChart tchart = getJFCchart_forecast(tdataset);
 			final ChartPanel jfcPanel = new ChartPanel(tchart);
-
 
 			ChartMouseListener cl = new ChartMouseListener() {
 			    public void chartMouseClicked(ChartMouseEvent chartmouseevent)
@@ -145,11 +141,7 @@ public class PanelEXPForecast extends JPanel {
 			            	case INVENTORY:
 			            		u.debug("INVENTORY");
 			            		break;
-			            		
-			            		
 			            }
-			      
-			            
 			    	}
 			    }
 
@@ -242,7 +234,6 @@ public class PanelEXPForecast extends JPanel {
 		standardChartTheme.setSmallFont(new Font("新細明體", Font.BOLD, 12));
 		
 		ChartFactory.setChartTheme(standardChartTheme);
-		
 		
 		// create the chart...
 		String title = "品種預購/生產/銷售/採購 比較圖\n" + panelSearchPcode.title + "\n";

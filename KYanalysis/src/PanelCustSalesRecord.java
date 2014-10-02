@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 
+
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -51,6 +52,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 	public String pcode;
 	public String ys;
 	public String ye;
+	private String pcname;
 	private MyTableModel model = null;
 	private JTable atable = new JTable();
 	private KYdb db = new KYdb();
@@ -61,6 +63,7 @@ public abstract class PanelCustSalesRecord extends JPanel {
 	final JCheckBox chkGroup;
 
 	private Connection con = db.getConnection();;
+	public JButton btnShowSalesKG;
 	
 	private void group(boolean group){
 		setCustcode(DATASRC, ys, ye, custcode, crop, group);
@@ -104,16 +107,24 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		{
 			public void mouseClicked(final MouseEvent e)
 			{
-				if (e.getClickCount() == 2)
+				final JTable target = (JTable)e.getSource();
+				final int row = target.getSelectedRow();
+				String pcode = (String)target.getValueAt(row, 0); //SQL must set pcode as 1st field
+				pcname = (String)target.getValueAt(row, 2); //SQL must set pcname as 3rd field
+				
+				if (e.getClickCount() == 1) //1:single click   2:double click
 				{
-					final JTable target = (JTable)e.getSource();
-					final int row = target.getSelectedRow();
-					String pcode = (String)target.getValueAt(row, 0);
-					u.debug (pcode);
-					//------------IMPORTANT----------------
-					update(); //need to be implemented!!!!!
-					//-------------------------------------
+					setShowSalesChartButton(pcode, pcname);
 					
+					//------------IMPORTANT----------------
+					update(); //need to be implemented by inheritor!!!!!
+					//-------------------------------------
+				}
+				else if (e.getClickCount() == 2){
+					PanelCustSalesChart sc = new PanelCustSalesChart();
+					sc.setVisible(true);
+					sc.setParameter(DATASRC, custcode, pcode, ys, ye);
+					u.debug(custcode + " "  );
 				}
 			}
 
@@ -129,8 +140,30 @@ public abstract class PanelCustSalesRecord extends JPanel {
 			}
 		});
 		titlepane.add(btnPricelistExport);
+		
+		btnShowSalesKG = new JButton("客戶品種歷年銷售量");
+		btnShowSalesKG.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				PanelCustSalesChart sc = new PanelCustSalesChart();
+				sc.setVisible(true);
+				sc.setParameter(DATASRC, custcode, pcode, ys, ye);
+				u.debug(custcode + " "  );
+			}
+		});
+		btnShowSalesKG.setEnabled(false);
+		titlepane.add(btnShowSalesKG);
+				
 		this.add(tablepane, BorderLayout.CENTER);
 	}
+	
+	public void setShowSalesChartButton(String pcode, String pcname){
+		u.debug (pcode);
+		this.pcode = pcode;
+		btnShowSalesKG.setText("客戶:" + custcode + " [" + pcode + ":" + pcname + "]歷年銷售量");
+		btnShowSalesKG.setEnabled(true);
+		
+	}
+	
 	public void setGroupDisabled(){
 		chkGroup.setSelected(false);
 	}
@@ -150,6 +183,10 @@ public abstract class PanelCustSalesRecord extends JPanel {
 		u.debug("records:" + atable.getRowCount());
 		//setColumnWidth();
 		atable.repaint();
+		
+		btnShowSalesKG.setEnabled(false);
+		btnShowSalesKG.setText("客戶品種歷年銷售量");
+		
 	}
 	/*
 	private void setColumnWidth(){

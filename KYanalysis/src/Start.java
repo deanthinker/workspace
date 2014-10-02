@@ -179,9 +179,7 @@ public class Start {
 		    }			
 		};
 		t.run();
-				
 		showUI();
-		
 	}
 
 
@@ -784,12 +782,9 @@ public class Start {
 				buildProductionVarietyQL_LQ();
 			}
 		});
-		
-
-		
+				
 		panelreport.setLayout(new GridLayout(0, 2, 0, 0));
 		panelreport.add(btnStatVarietyQL_LQ);
-
 		
 		JPanel panel_btn = new JPanel();
 		panel_btn.setLayout(new GridLayout(2, 1, 0, 0));
@@ -811,9 +806,7 @@ public class Start {
 	
 	protected JComponent makeCostPriceModePanel() {
 		JPanel settingpanel = new JPanel();
-
-		
-		
+				
 		return settingpanel;
 	}
 
@@ -825,7 +818,7 @@ public class Start {
 		pr.setVisible(true);
 		*/
 		
-		mainFrame.setTitle("Known-You Product Analysis");
+		mainFrame.setTitle("Known-You Product Analysis v1.1");
 		mainFrame.setBounds(10, 10, 1348, 640);
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
@@ -848,7 +841,7 @@ public class Start {
 
 		mainFrame.getContentPane().add(tabbedPane);
 		PanelTools panelTools = new PanelTools();
-		tabbedPane.addTab("其他", null, panelTools, null);
+		//tabbedPane.addTab("其他", null, panelTools, null);
 	}
 
 	private JFreeChart getJFCchart_production_variety(PieDataset dataset) {
@@ -922,13 +915,9 @@ public class Start {
 		plot.setNoDataMessage("No data available");
 
 		// plot.setForegroundAlpha(0.8f);
-
         
 		return chart;
-
 	}
-
-
 	
 	
 	//---------------------------MOST IMPORTANT --------------------------------------------------
@@ -941,7 +930,6 @@ public class Start {
 	//Top 10 landuse by Variety
 	//Top 5 income by crop type
 	//top 5 landuse by crop type
-
 	
 	private void update_listVegeProd_ProductionProd(boolean filterYear, boolean filterClass) {
 

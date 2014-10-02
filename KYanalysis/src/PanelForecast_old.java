@@ -349,6 +349,7 @@ public class PanelForecast_old extends JPanel {
 
 		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 
+		
 		renderer.setBaseItemLabelFont(new Font("Ariel", Font.PLAIN, 13));
 		renderer.setSeriesItemLabelGenerator(0, new XYItemLabelGenerator() { 
 			public String generateLabel(XYDataset dataset, int series, int item) {

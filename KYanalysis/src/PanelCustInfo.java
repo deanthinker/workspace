@@ -84,9 +84,7 @@ public abstract class PanelCustInfo extends JPanel {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
-		
 	
 	public PanelCustInfo(int dbsrc) {
 		DATASRC = dbsrc;

@@ -30,7 +30,7 @@ public class KYdb {
 	
 	private KYutil u = new KYutil();
 	
-	static private Connection con;
+	static Connection con;
 	
 	KYdb(){
 		if (con == null) //shared among all instances; only 1 connection only need to initialize once  
@@ -731,6 +731,28 @@ public class KYdb {
 		return icon;
 	}
 	
+	public String getPcname_by_pcode(String pcode){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "select pcname from vege_prod where pcode = '" + pcode + "'";
+		String pcname = "查無品種名";
+		
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				pcname = rs.getString("pcname");
+			}
+			rs.close();
+			stat.close();
+		}catch (SQLException e) {
+			debug("getPcname_by_pcode Exception :" + e.toString());
+		}
+				
+		return pcname;
+		
+	}
+	
 	public String getPcode_by_pcname(String kw){
 		String pcode = "";
 		Statement stat = null;
@@ -757,7 +779,7 @@ public class KYdb {
 	}
 		
 	
-	
+	/*
 	public ResultSet getResultset_vege_prod(){
 		Statement stat = null;
 		ResultSet rs = null;
@@ -775,7 +797,8 @@ public class KYdb {
 		
 		return rs;
 	}
-
+	 */
+	
 	public void fillList_dom_prod_orderby_sales(JList list, int ys, int ye, String level2){
 		ResultSet rs = null;
 		Statement stat = null;
@@ -1073,11 +1096,29 @@ public class KYdb {
 		Statement stat = null;
 		String sql = "";
 		DefaultListModel<String> listmodel = (DefaultListModel<String>) list.getModel();
-		
+/*		
 		if (filter)
 			sql = "Select level2, pcode, pcname from vege_prod where level2 = '" + level2 + "' order by pcode";
 		else
 			sql = "Select level2, pcode, pcname from vege_prod order by pcode";
+*/
+		//含三角貿易
+		if (filter){
+			sql ="Select ta.pcode, ta.level2, tv.pcname, tv.pename from ( "
+					+" Select distinct pcode, level2 from ( "
+					+" select distinct pcode, level2 from sao950 where pcode not like '%ZZ%' and pcode not like '%FL%' and level2 = '" + level2 + "'"
+					+" union all "
+					+" select distinct pcode, level2 from sao430 where pcode not like '%ZZ%' and pcode not like '%FL%' and level2 = '" + level2 + "'"
+				+" ) as t1 order by pcode, level2 ) ta, vege_prod as tv where ta.pcode = tv.pcode ";			
+		}else{
+			sql ="Select ta.pcode, ta.level2, tv.pcname, tv.pename from ( "
+					+" Select distinct pcode, level2 from ( "
+					+" select distinct pcode, level2 from sao950 where pcode not like '%ZZ%' and pcode not like '%FL%' "
+					+" union all "
+					+" select distinct pcode, level2 from sao430 where pcode not like '%ZZ%' and pcode not like '%FL%' "
+				+" ) as t1 order by pcode, level2 ) ta, vege_prod as tv where ta.pcode = tv.pcode ";			
+		}
+		
 		
 		listmodel.removeAllElements();
 		try {
@@ -1270,13 +1311,13 @@ public class KYdb {
 							+ " order by ntSales desc";
 						*/
 						//含三角
-						sql = "Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+						sql = "Select pcode, level2, pcname, pename, '一般' trade, invoice_date, unit_price, total_pack, total_weight, "
 							+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, " 
 							+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format((unit_price * toNTrate * total_pack)/10000,0) as '銷售額NT萬' " 
 							+ " from sao430 where custcode = '"+ custcode + "' and " 
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
 							+ " union all " 
-							+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+							+ " Select pcode, level2, '' pcname, pename, '三角' trade, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
 							+ " format((up * usrate),0) usKGprice, "
 							+ " format((up * twrate),0) ntKGprice, format((up * twrate * weight)/10000,0) '銷售額NT萬' " 
 							+ " from (select *, target custcode from sao950) as t9 "
@@ -1294,14 +1335,14 @@ public class KYdb {
 								+ " order by ntSales desc";
 						*/
 						//含三角
-						sql = "Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+						sql = "Select pcode, level2, pcname, pename, '一般' trade, invoice_date, unit_price, total_pack, total_weight, "
 								+ " format((unit_price * total_pack * toUSrate)/total_weight,0) as usKGprice, " 
 								+ " format((unit_price * total_pack * toNTrate)/total_weight,0) as ntKGprice, format((unit_price * toNTrate * total_pack)/10000,0) as '銷售額NT萬' " 
 								+ " from sao430 where custcode = '"+ custcode + "' and " 
 								+ " level2 = '" + crop + "' and "
 								+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
 								+ " union all " 
-								+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+								+ " Select pcode, level2, '' pcname, pename, '三角' trade, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
 								+ " format((up * usrate),0) usKGprice, "
 								+ " format((up * twrate),0) ntKGprice, format((up * twrate * weight)/10000,0) '銷售額NT萬' " 
 								+ " from (select *, target custcode from sao950) as t9 "
@@ -1342,13 +1383,13 @@ public class KYdb {
 					//含三角
 					sql = "Select pcode, level2, pcname, pename, format(sum(ntSales)/10000,0) '銷售額NT萬', format(sum(total_weight),0) soldKg, format(sum(ntSales)/sum(total_weight),0) NT公斤價 "
 						+ " from( "
-						+ " Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+						+ " Select pcode, level2, pcname, pename, '一般' trade, invoice_date, unit_price, total_pack, total_weight, "
 						+ " (unit_price * total_pack * toUSrate)/total_weight as usKGprice,  "
 						+ " (unit_price * total_pack * toNTrate)/total_weight as ntKGprice, unit_price * toNTrate * total_pack as ntSales " 
 						+ " from sao430 where custcode = '"+ custcode + "' and  "
 						+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
 						+ " union all "
-						+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+						+ " Select pcode,  level2, '' pcname, pename, '三角' trade,invoice_date, up unit_price, '' total_pack, weight total_weight, " 
 						+ " (up * usrate) usKGprice,  "
 						+ " (up * twrate) ntKGprice, (up * twrate * weight) ntSales  " 
 						+ " from (select *, target custcode from sao950) as t9  "
@@ -1359,14 +1400,14 @@ public class KYdb {
 				else
 					sql = "Select pcode, level2, pcname, pename, format(sum(ntSales)/10000,0) '銷售額NT萬', format(sum(total_weight),0) soldKg, format(sum(ntSales)/sum(total_weight),0) ntKGprice "
 							+ " from( "
-							+ " Select '一般' trade, pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
+							+ " Select pcode,  level2, pcname, pename, '一般' trade,invoice_date, unit_price, total_pack, total_weight, "
 							+ " (unit_price * total_pack * toUSrate)/total_weight as usKGprice,  "
 							+ " (unit_price * total_pack * toNTrate)/total_weight as ntKGprice, unit_price * toNTrate * total_pack as ntSales " 
 							+ " from sao430 where custcode = '"+ custcode + "' and  "
 							+ " level2 = '" + crop + "' and "
 							+ " year(invoice_date) >= "+ys+" and year(invoice_date)<= " + ye 
 							+ " union all "
-							+ " Select '三角' trade, pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
+							+ " Select pcode,  level2, '' pcname, pename, '三角' trade, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
 							+ " (up * usrate) usKGprice,  "
 							+ " (up * twrate) ntKGprice, (up * twrate * weight) ntSales  " 
 							+ " from (select *, target custcode from sao950) as t9  "
