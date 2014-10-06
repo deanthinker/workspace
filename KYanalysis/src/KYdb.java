@@ -1394,7 +1394,7 @@ public class KYdb {
 						+ " (up * twrate) ntKGprice, (up * twrate * weight) ntSales  " 
 						+ " from (select *, target custcode from sao950) as t9  "
 						+ " where inexp = 'E' and  "
-						+ " custcode = 'KYI' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
+						+ " custcode = '"+ custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
 						+ " ) as tsum group by pcode order by ntSales desc";
 				}
 				else
@@ -1413,7 +1413,7 @@ public class KYdb {
 							+ " from (select *, target custcode from sao950) as t9  "
 							+ " where inexp = 'E' and  "
 							+ " level2 = '" + crop + "' and "
-							+ " custcode = 'KYI' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
+							+ " custcode = '"+ custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date) <=" + ye 
 							+ " ) as tsum group by pcode order by ntSales desc";
 				
 
