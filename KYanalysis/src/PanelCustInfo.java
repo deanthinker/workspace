@@ -32,6 +32,7 @@ import org.jfree.data.general.PieDataset;
 import org.jfree.util.Rotation;
 
 import java.math.BigDecimal;
+import javax.swing.JSplitPane;
 
 
 public abstract class PanelCustInfo extends JPanel {
@@ -60,6 +61,8 @@ public abstract class PanelCustInfo extends JPanel {
 	private JTable atable = new JTable();
 	JPanel panelcustSales = new JPanel();
 	JPanel paneltotalSales = new JPanel();
+	private final JSplitPane splitPaneChart = new JSplitPane();
+	private final JSplitPane splitPaneMain = new JSplitPane();
 	
 	public static void main(String[] args) {
 
@@ -89,9 +92,17 @@ public abstract class PanelCustInfo extends JPanel {
 	public PanelCustInfo(int dbsrc) {
 		DATASRC = dbsrc;
 		setLayout(new GridLayout(1,3,0,0));
-		add(compSalesCropTable());
-		add(panelcustSales);
-		add(paneltotalSales);
+	
+		
+		splitPaneChart.setLeftComponent(panelcustSales);
+		splitPaneChart.setRightComponent(paneltotalSales);
+		splitPaneChart.setDividerLocation(280);
+		
+		splitPaneMain.setLeftComponent(compSalesCropTable());
+		splitPaneMain.setRightComponent(splitPaneChart);
+		splitPaneMain.setDividerLocation(280);
+		add(splitPaneMain);
+
 	}
 	
 
@@ -255,12 +266,13 @@ public abstract class PanelCustInfo extends JPanel {
 		{
 			public void mouseClicked(final MouseEvent e)
 			{
+				final JTable target = (JTable)e.getSource();
+				final int row = target.getSelectedRow();
+				//final int column = target.getSelectedColumn();
+				selectedcrop = (String)target.getValueAt(row, 0);
+				
 				if (e.getClickCount() == 1)
 				{
-					final JTable target = (JTable)e.getSource();
-					final int row = target.getSelectedRow();
-					//final int column = target.getSelectedColumn();
-					selectedcrop = (String)target.getValueAt(row, 0);
 					cropSales = (String)target.getValueAt(row, 2);
 					//------------IMPORTANT----------------
 					update(); //need to be implemented!!!!!
@@ -268,6 +280,15 @@ public abstract class PanelCustInfo extends JPanel {
 					u.debug (selectedcrop);
 					refreshCustVarietySalesChart();
 				}
+				else if (e.getClickCount() == 2){
+					PanelCustCropSalesChart sc = new PanelCustCropSalesChart();
+					sc.setVisible(true);
+					sc.setParameter(DATASRC, custcode, selectedcrop, ys, ye);
+					u.debug(crop + " "  );					
+					
+				}
+				
+				
 			}
 
 		});	

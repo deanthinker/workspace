@@ -818,7 +818,7 @@ public class Start {
 		pr.setVisible(true);
 		*/
 		
-		mainFrame.setTitle("Known-You Product Analysis v1.1");
+		mainFrame.setTitle("Known-You Product Analysis v1.2");
 		mainFrame.setBounds(10, 10, 1348, 640);
 		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
