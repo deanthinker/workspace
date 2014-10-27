@@ -196,13 +196,13 @@ public abstract class PanelCustInfo extends JPanel {
 		float cropsales = 0;
 		if (selectedcrop == null)  return dataset;
 		
-		ResultSet rs = db.getResultset_CustVarietySales(DATASRC, ys, ye, custcode, selectedcrop);
+		ResultSet rs = db.getResultset_CustVarietySalesByCrop(DATASRC, ys, ye, custcode, selectedcrop);
 		
 
 		try {
 			while(rs.next()){
 				cropname = rs.getString("pcname");
-				cropsales = Float.valueOf(rs.getString("sales").replace(",", ""));
+				cropsales = Float.valueOf(rs.getString("ntsales").replace(",", ""));
 				dataset.setValue(cropname, cropsales);
 			}
 			rs.close();	
@@ -281,7 +281,8 @@ public abstract class PanelCustInfo extends JPanel {
 					refreshCustVarietySalesChart();
 				}
 				else if (e.getClickCount() == 2){
-					PanelCustCropSalesChart sc = new PanelCustCropSalesChart();
+					//PanelCustCropSalesChart sc = new PanelCustCropSalesChart();
+					PanelCustCropSalesStackedChart sc = new PanelCustCropSalesStackedChart();
 					sc.setVisible(true);
 					sc.setParameter(DATASRC, custcode, selectedcrop, ys, ye);
 					u.debug(crop + " "  );					

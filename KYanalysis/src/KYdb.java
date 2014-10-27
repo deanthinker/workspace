@@ -735,13 +735,15 @@ public class KYdb {
 		Statement stat = null;
 		ResultSet rs = null;
 		String sql = "select pcname from vege_prod where pcode = '" + pcode + "'";
-		String pcname = "查無品種名";
+		String pcname = "";
 		
 		try {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
 			while (rs.next()) {
 				pcname = rs.getString("pcname");
+				if (pcname.length() <= 1)
+					pcname = pcode+"無名"; 
 			}
 			rs.close();
 			stat.close();
@@ -1485,43 +1487,82 @@ public class KYdb {
 		
 		return rs;		
 	}
-	
-	public ResultSet getResultset_CustVarietySales(int dbsrc, String ys, String ye, String custcode, String crop){
+
+	public ResultSet getResultset_CustVarietySalesByPcode(int dbsrc, String ys, String ye, String custcode, String pcodes){
 		Statement stat = null;
 		ResultSet rs = null;
 		String sql = "";
 		
 		switch (dbsrc){
 		case EXPORT:
-			//return a list of variety sales
-			/*
-			sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as 'sales' from " 
-					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
-					+" (SELECT *, year(invoice_date) as year, (unit_price * toNTrate * total_pack) as total from sao430 " 
-					+" where custcode = '" + custcode + "' and level2 = '" + crop + "' and "
-					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
-					+ " group by pcode ) as t2 order by tsales desc";
-			*/
 			//含三角
-			sql =   "SELECT pcode, level2, pcname, format(soldkg,0), format(tsales/10000,0) sales from ( " 
-					+" SELECT *, sum(total_weight) soldkg, sum(ntSales) tsales from ( "
-					+" Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight, "
-					+" ((unit_price * total_pack * toUSrate)/total_weight) as usKGprice,  "
-					+" ((unit_price * total_pack * toNTrate)/total_weight) as ntKGprice, (unit_price * toNTrate * total_pack) as ntSales " 
-					+" from sao430 where custcode = '" + custcode + "' and level2 = '" + crop + "' and  "
-					+" year(invoice_date) >= "+ys+" and year(invoice_date)<= "+ye+"  "
-					+" union all "
-					+" Select pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight, " 
-					+" (up * usrate) usKGprice,  "
-					+" (up * twrate) ntKGprice, (up * twrate * weight) ntSales " 
-					+" from (select *, target custcode from sao950) as t9 "
-					+" where inexp = 'E' and level2 = '" + crop + "' and  "
-					+" custcode = '" + custcode + "' and year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+ " " 
-					+" ) as tx group by pcode ) as TX order by tsales";
+			sql = "SELECT yr, pcode, level2, pcname, format(soldkg,0) skg, format(ntsales/10000,0) ntsales, format(ussales/1000,0) ussales  from (   "+
+					" SELECT *, sum(total_weight) soldkg, sum(nts) ntsales, sum(uss) ussales from (  "+
+					" Select year(invoice_date) yr, pcode, level2, pcname, pename, unit_price, total_pack, total_weight,  "+
+					" ((unit_price * total_pack * toUSrate)/total_weight) as usKGprice,   "+
+					" ((unit_price * total_pack * toNTrate)/total_weight) as ntKGprice, (unit_price * toNTrate * total_pack) as nts, (unit_price * toUSrate * total_pack) as uss "+
+					" from sao430 where custcode = '" + custcode + "' and pcode in (" + pcodes + ") and   "+
+					" year(invoice_date) >= " + ys + " and year(invoice_date)<= " + ye +
+					" union all  "+
+					" Select yr, pcode, level2, '' pcname, pename, up unit_price, '' total_pack, weight total_weight,  "+
+					" (up * usrate) usKGprice,   "+
+					" (up * twrate) ntKGprice, (up * twrate * weight) nts, (up * usrate * weight) uss "+
+					" from (select *, target custcode, year(invoice_date) yr from sao950) as t9 "+ 
+					" where inexp = 'E' and pcode in (" + pcodes + ") and "+  
+					" custcode = '" + custcode + "' and year(invoice_date) >= " + ys + " and year(invoice_date)<= " + ye +
+				" ) as tx group by yr,pcode ) as TX order by yr,pcode";
 			break;
 		case DOMESTIC:
 			//return a list of variety sales
-			sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as 'sales' from " 
+			sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as ntsales from " 
+					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
+					+" (SELECT *, year(invoice_date) as yr, (packprice * actlqty) as total from dom430 " 
+					+" where custcode = '" + custcode + "' and pcode in (" + pcodes + ") and "
+					+" year(invoice_date) >= "+ys+" and year(invoice_date) <= "+ye+") as t1  "
+					+ " group by yr, pcode ) as t2 order by pcode,yr";
+			break;
+		}
+						
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_CustVarietySalesByPcode Exception :" + e.toString());
+		}
+		
+		return rs;	
+	}
+	
+	
+	public ResultSet getResultset_CustVarietySalesByCrop(int dbsrc, String ys, String ye, String custcode, String crop){
+		Statement stat = null;
+		ResultSet rs = null;
+		String sql = "";
+		
+		switch (dbsrc){
+		case EXPORT:
+			//含三角
+			sql = "SELECT pcode, level2, pcname, soldkg skg, (ntsales/10000) ntsales, (ussales/1000) ussales  from (   "+
+					" SELECT *, sum(total_weight) soldkg, sum(nts) ntsales, sum(uss) ussales from (  "+
+					" Select pcode, level2, pcname, pename, invoice_date, unit_price, total_pack, total_weight,  "+
+					" ((unit_price * total_pack * toUSrate)/total_weight) as usKGprice,   "+
+					" ((unit_price * total_pack * toNTrate)/total_weight) as ntKGprice, (unit_price * toNTrate * total_pack) as nts, (unit_price * toUSrate * total_pack) as uss "+
+					" from sao430 where custcode = '" + custcode + "' and level2 = '" + crop + "' and   "+
+					" year(invoice_date) >= " + ys + " and year(invoice_date)<= " + ye +
+					" union all  "+
+					" Select pcode, level2, '' pcname, pename, invoice_date, up unit_price, '' total_pack, weight total_weight,  "+
+					" (up * usrate) usKGprice,   "+
+					" (up * twrate) ntKGprice, (up * twrate * weight) nts, (up * usrate * weight) uss "+
+					" from (select *, target custcode from sao950) as t9 "+ 
+					" where inexp = 'E' and level2 = '" + crop + "' and "+  
+					" custcode = '" + custcode + "' and year(invoice_date) >= " + ys + " and year(invoice_date)<= " + ye +
+				" ) as tx group by pcode ) as TX order by ntsales desc";
+			break;
+		case DOMESTIC:
+			//return a list of variety sales
+			sql = "SELECT pcode, level2, pcname, format(tweight,1) as 'soldkg', format(tsales/10000,1) as 'tsales' from " 
 					+" (SELECT *, sum(total_weight) as tweight, sum(total) as tsales from " 
 					+" (SELECT *, year(invoice_date) as year, (packprice * actlqty) as total from dom430 " 
 					+" where custcode = '" + custcode + "' and level2 = '" + crop + "' and "
@@ -1536,7 +1577,7 @@ public class KYdb {
 			stat = con.createStatement();
 			rs = stat.executeQuery(sql);
 		}catch (SQLException e) {
-			debug("getResultset_CustVarietySales Exception :" + e.toString());
+			debug("getResultset_CustVarietySalesByCrop Exception :" + e.toString());
 		}
 		
 		return rs;	
@@ -2225,7 +2266,7 @@ public class KYdb {
 	public ResultSet getResultSet_pln145(String pcode, String ys){
 		Statement stat = null;
 		ResultSet rs = null;
-		String sql = "SELECT pcode, pcname, region, planyear, planq, if(class = 'E', '增購', '預購') as class, planqty "
+		String sql = "SELECT pcode, pcname, agentid, planyear, planq, if(class = 'E', '增購', '預購') as class, planqty "
 				+ " from pln145 where planyear = "+ ys + " and pcode = '" + pcode + "'"
 				+ " order by planq";
 
@@ -2972,14 +3013,14 @@ public class KYdb {
 		String serverip = "localhost";
 		String dbTable = "market";
 		String username = "root";
-		String password = "1234";
+		String password = "1qaz2wsx";
 		Connection connection = null;
 
 		String connURL = "jdbc:mysql://" + serverip + "/" + dbTable
 				+ "?useUnicode=true&characterEncoding=utf-8";
-		debug("loading database");
-		debug(connURL);
-		debug("user:" + username + "  password:" + password);
+		//debug("loading database");
+		//debug(connURL);
+		//debug("user:" + username + "  password:" + password);
 
 		try {
 			Class.forName(driver); // 註冊driver
