@@ -456,8 +456,6 @@ public class Start {
 		});
 		buttonGroup1.add(radStatSingleVar);
 		panel_class.add(radStatSingleVar);
-
-		
 		
 		cbx_stat_rankclass.setEnabled(false);
 		panel_class.add(cbx_stat_rankclass);
@@ -841,7 +839,7 @@ public class Start {
 
 		mainFrame.getContentPane().add(tabbedPane);
 		PanelTools panelTools = new PanelTools();
-		//tabbedPane.addTab("其他", null, panelTools, null);
+		tabbedPane.addTab("其他", null, panelTools, null);
 	}
 
 	private JFreeChart getJFCchart_production_variety(PieDataset dataset) {
