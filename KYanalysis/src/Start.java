@@ -1282,7 +1282,7 @@ public class Start {
 		StyleBuilder titleStyle        = stl.style(boldCenteredStyle)
 		                                    .setVerticalAlignment(VerticalAlignment.MIDDLE)
 		                                    .setFontSize(15);
-		TextColumnBuilder<Integer>  colrow  = col.reportRowNumberColumn("#").setWidth(4);;
+		TextColumnBuilder<Integer>  colrow  = col.reportRowNumberColumn("#").setWidth(4);
 		TextColumnBuilder<String>  colpcode  = col.column("品編", "pcode", type.stringType()).setWidth(5);
 		TextColumnBuilder<String>  colcrop  = col.column("作物", "crop", type.stringType()).setWidth(5);
 		TextColumnBuilder<String>  colpname  = col.column("品種名稱", "pname", type.stringType()).setWidth(10);

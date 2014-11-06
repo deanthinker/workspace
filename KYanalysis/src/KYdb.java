@@ -1207,6 +1207,187 @@ public class KYdb {
 		return count;
 	}	
 
+	public ResultSet getResultset_CustVarietyProduction(String custcode, String level2, String ys, String ye, String orderby, Float per){
+		//客戶_品種_占比_達成率含三角.sql
+		Statement stat = null;
+		ResultSet rs = null;
+		float avgntcost = 0;
+		String sql = "";
+		
+		if (level2 != null && level2.equals("all")==false){
+			sql = 
+			"SELECT pcode, level2, pcname, format(skg,0) skg, format(ussales,0) ussales, format(ntsales,0) ntsales, format(per,2) per, format((@run := @run + per),2) runper, format(custfqty,0) custfqty, format(totalfqty,0) totalfqty, format(pqty,0) pqty, format(bkg,0) bkg, format(achrate,2) achrate, site, format(avgc,0) avgc, format(avgp,0) avgp, format(gp,2) gp from ( "+
+			"	SELECT a.pcode, level2, g.pcname, skg, ussales, ntsales, per, b.custfqty, c.totalfqty, d.pqty, e.bkg, (e.bkg/d.pqty) achrate, f.site, h.avgc, h.avgp, h.gp from ( "+
+			"		SELECT custcode, pcode, level2, skg, (ussales/1000) ussales, (ntsales/10000) ntsales, nttotal, (ntsales/nttotal) per from  "+
+			"		( "+//#三角貿易 和 一般交易 品種銷售額
+			"			Select custcode, pcode, level2, sum(skg) skg, sum(ussales) ussales, sum(ntsales) ntsales from "+
+			"				( "+
+			"				select target custcode, pcode, level2, sum(weight) skg, sum(up*weight*usrate) ussales, sum(up*weight*twrate) ntsales  "+
+			"				from sao950 where target='" + custcode + "' and level2='" + level2 + "' and inexp = 'E'  and year(invoice_date)>= " + ys + " and year(invoice_date)<= " + ye + " "+
+			"				group by pcode "+
+			"				union "+
+			"				select custcode, pcode, level2,sum(total_weight) skg, sum(unit_price * toUSrate * total_pack) ussales, sum(unit_price * toNTrate * total_pack) ntsales "+
+			"				from sao430 where custcode = '" + custcode + "' and level2='" + level2 + "' and year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + "  "+
+			"				group by pcode "+
+			"				) x1 "+
+			"			group by pcode "+
+			"		)t1, "+
+			"		( "+//#三角貿易和一般交易合併總金額
+			"			Select sum(ntsales) nttotal from "+
+			"				( "+
+			"				select sum(up*weight*twrate) ntsales  "+
+			"				from sao950 where target='" + custcode + "' and level2='" + level2 + "' and inexp = 'E'  and year(invoice_date)>= " + ys + " and year(invoice_date)<= " + ye + " "+
+			"				union "+
+			"				select sum(unit_price * toNTrate * total_pack) ntsales "+
+			"				from sao430 where custcode = '" + custcode + "' and level2='" + level2 + "' and year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + "  "+
+			"				) x1 "+
+			"		) t2 "+
+			"	) as a "+
+			"	left join "+ 
+			"	("+ //#指定區域預購 
+			"	select pcode, sum(planqty) custfqty from pln145 where agentid = (Select agentid from agent2rbu where custcode='" + custcode + "')  "+
+			"	and planyear >= " + ys + " and planyear <= " + ye + "  "+
+			"	group by pcode) as b "+
+			"	on a.pcode = b.pcode "+
+			"	left join  "+
+			"	("+ //#全球預購 
+			"	select pcode, sum(planqty) totalfqty from pln145   "+
+			"	where planyear >= " + ys + " and planyear <= " + ye + "  "+
+			"	group by pcode) as c on a.pcode = c.pcode "+
+			"	left join  "+
+			"	( "+//#計畫總量
+			"	select pcode, sum(qty) pqty from pro130 where estd_year>= " + ys + " and estd_year<= " + ye + " group by pcode  "+
+			"	) as d on a.pcode = d.pcode "+
+			"	left join "+
+			"	( "+//#總採購量含三角貿易
+			"	select pcode, sum(bkg) bkg from ( "+
+			"		select pcode, sum(intostock_qty) bkg from pro370 where year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + " "+
+			"		group by pcode "+ //#國外
+			"		union "+
+			"		select pcode, sum(intostock_qty) bkg from pro960 where year(supply_date) >= " + ys + " and year(supply_date) <= " + ye + "  "+ 
+			"		group by pcode "+ //#國內
+			"		union "+
+			"		select pcode, sum(weight) bkg from sao950 where inexp = 'I' and year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + " "+
+			"		group by pcode "+ //#三角
+			"	) x group by pcode "+
+			"	) as e on a.pcode = e.pcode "+
+			"	left join "+
+			"	( "+//#生產地
+			"		select pcode, GROUP_CONCAT(site, '=',qty) site from ( "+
+			"			select pcode, site, sum(qty) qty from pro130  "+
+			"			where estd_year >= " + ys + " and estd_year <=" + ye + " "+
+			"			group by pcode, site "+
+			"		) x group by pcode "+
+			"	) f on a.pcode = f.pcode "+
+			"	left join "+
+			"	( "+
+			"	select pcode, pcname from vege_prod "+
+			"	) g on a.pcode = g.pcode "+
+			"	left join "+
+			"	( "+//#區間成本/售價/毛利
+			"		SELECT pcode, tcost/bkg avgc, tsales/skg avgp, ((tsales/skg)-(tcost/bkg))/(tsales/skg) gp from ( "+
+			"			SELECT pcode, sum(buykg) bkg, sum(tcost) tcost, sum(soldkg) skg, sum(tsales) tsales FROM market.integratedgp  "+
+			"			where year>= " + ys + " and year<= " + ye + " "+
+			"		group by pcode ) x "+
+			"	) h on a.pcode = h.pcode "+
+			"order by "+ orderby + " desc "+
+			") A, (Select @run := 0) B " +
+			"where @run <= " + per;
+		}else{
+			sql = 
+					"SELECT pcode, level2, pcname, format(skg,0) skg, format(ussales,0) ussales, format(ntsales,0) ntsales, format(per,2) per, format((@run := @run + per),2) runper, format(custfqty,0) custfqty, format(totalfqty,0) totalfqty, format(pqty,0) pqty, format(bkg,0) bkg, format(achrate,2) achrate, site, format(avgc,0) avgc, format(avgp,0) avgp, format(gp,2) gp from ( "+
+			"	SELECT a.pcode, level2, g.pcname, skg, ussales, ntsales, per, b.custfqty, c.totalfqty, d.pqty, e.bkg, (e.bkg/d.pqty) achrate, f.site, h.avgc, h.avgp, h.gp from ( "+
+			"		SELECT custcode, pcode, level2, skg, (ussales/1000) ussales, (ntsales/10000) ntsales, nttotal, (ntsales/nttotal) per from  "+
+			"		( "+//#三角貿易 和 一般交易 品種銷售額
+			"			Select custcode, pcode, level2, sum(skg) skg, sum(ussales) ussales, sum(ntsales) ntsales from "+
+			"				( "+
+			"				select target custcode, pcode, level2, sum(weight) skg, sum(up*weight*usrate) ussales, sum(up*weight*twrate) ntsales  "+
+			"				from sao950 where target='" + custcode + "' and inexp = 'E'  and year(invoice_date)>= " + ys + " and year(invoice_date)<= " + ye + " "+
+			"				group by pcode "+
+			"				union "+
+			"				select custcode, pcode, level2,sum(total_weight) skg, sum(unit_price * toUSrate * total_pack) ussales, sum(unit_price * toNTrate * total_pack) ntsales "+
+			"				from sao430 where custcode = '" + custcode + "' and year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + "  "+
+			"				group by pcode "+
+			"				) x1 "+
+			"			group by pcode "+
+			"		)t1, "+
+			"		( "+//#三角貿易和一般交易合併總金額
+			"			Select sum(ntsales) nttotal from "+
+			"				( "+
+			"				select sum(up*weight*twrate) ntsales  "+
+			"				from sao950 where target='" + custcode + "' and inexp = 'E'  and year(invoice_date)>= " + ys + " and year(invoice_date)<= " + ye + " "+
+			"				union "+
+			"				select sum(unit_price * toNTrate * total_pack) ntsales "+
+			"				from sao430 where custcode = '" + custcode + "' and  year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + "  "+
+			"				) x1 "+
+			"		) t2 "+
+			"	) as a "+
+			"	left join "+ 
+			"	("+ //#指定區域預購 
+			"	select pcode, sum(planqty) custfqty from pln145 where agentid = (Select agentid from agent2rbu where custcode='" + custcode + "')  "+
+			"	and planyear >= " + ys + " and planyear <= " + ye + "  "+
+			"	group by pcode) as b "+
+			"	on a.pcode = b.pcode "+
+			"	left join  "+
+			"	("+ //#全球預購 
+			"	select pcode, sum(planqty) totalfqty from pln145   "+
+			"	where planyear >= " + ys + " and planyear <= " + ye + "  "+
+			"	group by pcode) as c on a.pcode = c.pcode "+
+			"	left join  "+
+			"	( "+//#計畫總量
+			"	select pcode, sum(qty) pqty from pro130 where estd_year>= " + ys + " and estd_year<= " + ye + " group by pcode  "+
+			"	) as d on a.pcode = d.pcode "+
+			"	left join "+
+			"	( "+//#總採購量含三角貿易
+			"	select pcode, sum(bkg) bkg from ( "+
+			"		select pcode, sum(intostock_qty) bkg from pro370 where year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + " "+
+			"		group by pcode "+ //#國外
+			"		union "+
+			"		select pcode, sum(intostock_qty) bkg from pro960 where year(supply_date) >= " + ys + " and year(supply_date) <= " + ye + "  "+ 
+			"		group by pcode "+ //#國內
+			"		union "+
+			"		select pcode, sum(weight) bkg from sao950 where inexp = 'I' and year(invoice_date) >= " + ys + " and year(invoice_date) <= " + ye + " "+
+			"		group by pcode "+ //#三角
+			"	) x group by pcode "+
+			"	) as e on a.pcode = e.pcode "+
+			"	left join "+
+			"	( "+//#生產地
+			"		select pcode, GROUP_CONCAT(site, '=',qty) site from ( "+
+			"			select pcode, site, sum(qty) qty from pro130  "+
+			"			where estd_year >= " + ys + " and estd_year <=" + ye + " "+
+			"			group by pcode, site "+
+			"		) x group by pcode "+
+			"	) f on a.pcode = f.pcode "+
+			"	left join "+
+			"	( "+
+			"	select pcode, pcname from vege_prod "+
+			"	) g on a.pcode = g.pcode "+
+			"	left join "+
+			"	( "+//#區間成本/售價/毛利
+			"		SELECT pcode, tcost/bkg avgc, tsales/skg avgp, ((tsales/skg)-(tcost/bkg))/(tsales/skg) gp from ( "+
+			"			SELECT pcode, sum(buykg) bkg, sum(tcost) tcost, sum(soldkg) skg, sum(tsales) tsales FROM market.integratedgp  "+
+			"			where year>= " + ys + " and year<= " + ye + " "+
+			"		group by pcode ) x "+
+			"	) h on a.pcode = h.pcode "+
+			"order by "+ orderby + " desc "+
+			") A, (Select @run := 0) B " +
+			"where @run <= " + per;
+			
+		}
+			
+		debug(sql);
+
+		try {
+			stat = con.createStatement();
+			rs = stat.executeQuery(sql);
+		}catch (SQLException e) {
+			debug("getResultset_CustVarietyProduction Exception :" + e.toString());
+		}
+		
+		return rs;		
+		
+	}
+	
 	public ResultSet getResultset_sao950(String pcode, String year){
 		Statement stat = null;
 		ResultSet rs = null;

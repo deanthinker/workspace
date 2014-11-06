@@ -1,6 +1,8 @@
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
@@ -8,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.AttributedString;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -32,6 +35,7 @@ import org.jfree.data.general.PieDataset;
 import org.jfree.util.Rotation;
 
 import java.math.BigDecimal;
+
 import javax.swing.JSplitPane;
 
 
@@ -42,7 +46,7 @@ public abstract class PanelCustInfo extends JPanel {
 	private KYdb db = new KYdb();
 	private KYutil u = new KYutil();
 	public String custcode;
-	public String crop;
+	//public String crop;
 	public String selectedcrop = null;
 	public String pcode;
 	public String ys;
@@ -63,6 +67,7 @@ public abstract class PanelCustInfo extends JPanel {
 	JPanel paneltotalSales = new JPanel();
 	private final JSplitPane splitPaneChart = new JSplitPane();
 	private final JSplitPane splitPaneMain = new JSplitPane();
+	private JButton btnVarietyProduction = new JButton("[所有作物]預購/銷售/生產/達成率分析");
 	
 	public static void main(String[] args) {
 
@@ -238,13 +243,23 @@ public abstract class PanelCustInfo extends JPanel {
 	private JComponent compSalesCropTable(){
 		
 		JPanel tablepane = new JPanel(new BorderLayout());
-		JPanel titlepane = new JPanel(new GridLayout(6,1,0,0));
+		JPanel titlepane = new JPanel(new GridLayout(7,1,0,0));
 		titlepane.add(lbltitle);
 		titlepane.add(lblcust);
 		titlepane.add(lblname);
 		titlepane.add(lblcountry);
 		titlepane.add(lblregion);
 		titlepane.add(lblsales);
+		titlepane.add(btnVarietyProduction);
+		
+		btnVarietyProduction.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				PanelCustVarietyProduction custvarprodFrame = new PanelCustVarietyProduction(custcode, selectedcrop, ys, ye, "ussales", new Float(0.8));
+				custvarprodFrame.setVisible(true);
+				
+			}
+		});
+		btnVarietyProduction.setEnabled(false);
 		
 		tablepane.add(titlepane, BorderLayout.NORTH);
 		
@@ -269,15 +284,17 @@ public abstract class PanelCustInfo extends JPanel {
 				final JTable target = (JTable)e.getSource();
 				final int row = target.getSelectedRow();
 				//final int column = target.getSelectedColumn();
-				selectedcrop = (String)target.getValueAt(row, 0);
 				
 				if (e.getClickCount() == 1)
 				{
+					selectedcrop = (String)target.getValueAt(row, 0);
+					
 					cropSales = (String)target.getValueAt(row, 2);
 					//------------IMPORTANT----------------
 					update(); //need to be implemented!!!!!
 					//-------------------------------------
 					u.debug (selectedcrop);
+					btnVarietyProduction.setText("["+selectedcrop+ "] 預購/銷售/生產/達成率分析");
 					refreshCustVarietySalesChart();
 				}
 				else if (e.getClickCount() == 2){
@@ -285,7 +302,7 @@ public abstract class PanelCustInfo extends JPanel {
 					PanelCustCropSalesStackedChart sc = new PanelCustCropSalesStackedChart();
 					sc.setVisible(true);
 					sc.setParameter(DATASRC, custcode, selectedcrop, ys, ye);
-					u.debug(crop + " "  );					
+					u.debug(selectedcrop + " "  );					
 					
 				}
 				
@@ -306,7 +323,7 @@ public abstract class PanelCustInfo extends JPanel {
 		this.ye = ye;
 		this.custcode = custcode;
 		this.pcode = pcode;
-		this.crop = crop;
+		this.selectedcrop = crop;
 		
 		this.model = new MyTableModel(db.getResultset_CustSales(dbsrc, ys,ye,custcode,null,crop));
 		
@@ -315,6 +332,9 @@ public abstract class PanelCustInfo extends JPanel {
 		RowSorter<MyTableModel> sorter = new TableRowSorter<MyTableModel>(model);
 		atable.setRowSorter(sorter);
 		setColumnWidth();
+		
+		btnVarietyProduction.setText("[所有作物]預購/銷售/生產/達成率分析");
+		btnVarietyProduction.setEnabled(true);
 		
 		this.totalSales = db.getYearRangeSales(dbsrc, ys,ye);
 		this.custSales = db.getYearRangeSalesByCust(dbsrc, ys,ye,custcode);
